@@ -22,6 +22,7 @@ npx.cmd tsc --noEmit          # sprawdzenie typów – zawsze przed oddaniem zmi
 npx.cmd expo export --platform ios --platform android --output-dir dist   # czy aplikacja się buduje
 npx.cmd expo install <pakiet> # nowe biblioteki – zawsze tak
 npm.cmd run pois              # pobiera szczyty/schroniska z OSM do src/data/tatry-osm.json (wbudowane w aplikację)
+npm.cmd run dem               # pobiera model terenu Copernicus do src/data/tatry-dem.json (pliki źródłowe w .cache/dem)
 npx.cmd eas-cli@latest build -p android --profile preview   # testowy APK na Androida
 ```
 Nowe biblioteki muszą działać w **Expo Go** – sprawdź `node_modules/expo/bundledNativeModules.json`. Inaczej najpierw zapytaj.
@@ -57,8 +58,14 @@ src/components/
 src/data/
   overpass-query.json       – zapytanie Overpass + obszar Tatr (wspólne dla aplikacji i skryptu)
   tatry-osm.json            – punkty wbudowane w aplikację; generuje `npm.cmd run pois` (scripts/fetch-pois.mjs)
+  tatry-dem.json            – model terenu (siatka ok. 90 m, int16 w base64, ok. 3,5 MB); generuje `npm.cmd run dem`
+                              (scripts/fetch-dem.mjs, biblioteka geotiff tylko w devDependencies). Aplikacja go jeszcze nie importuje.
 src/lib/
   exif.ts                   – GPS, data i kierunek z EXIF (czyste funkcje; różnice iOS/Android opisane w pliku)
+  dem.ts                    – model terenu: parseDem, elevationAt (interpolacja), observerHeight (teren + 1,7 m,
+                              wysokość szczytu, gdy stoimy na nim; GPS tylko wyraźnie wyżej) – czyste funkcje
+  horizon.ts                – panorama horyzontu (computeHorizon, 3600 promieni), visiblePeaks (zasłonięte /
+                              na linii nieba), bearing; krzywizna Ziemi i refrakcja – czyste funkcje
   places.ts                 – grupowanie zdjęć w miejsca (PLACE_RADIUS_M = 40 m), odległość (czyste funkcje)
   pois.ts                   – punkty z OSM: zapytanie Overpass, parseOverpass, poiName (pl), visiblePois (czyste)
   poiStore.tsx              – PoisProvider / usePois(): kolejno plik w telefonie (pois-v1.json) → plik wbudowany
@@ -107,5 +114,5 @@ komentarze w kodzie po polsku.
 ## Sprawdzanie zmian
 1. `npx.cmd tsc --noEmit` bez błędów.
 2. `expo export` dla iOS i Androida przechodzi.
-3. Logikę bez Reacta (`exif.ts`, `places.ts`, `photoModel.ts`, `pois.ts`, `trip.ts`, `routing.ts`) testuj na przykładach (kompilacja `tsc` do JS + `node`).
+3. Logikę bez Reacta (`exif.ts`, `places.ts`, `photoModel.ts`, `pois.ts`, `trip.ts`, `routing.ts`, `dem.ts`, `horizon.ts`) testuj na przykładach (kompilacja `tsc` do JS + `node`).
 4. Napisz użytkownikowi wprost, czego nie sprawdzono na telefonie.

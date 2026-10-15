@@ -147,8 +147,8 @@ Zamiast sieci, która „zna” wygląd Giewontu (brak danych treningowych, każ
 
 ### 7.6. Kolejność prac
 
-1. Zapis dodatkowych pól EXIF przy imporcie (mała zmiana, od razu).
-2. Skrypt przygotowania DEM Tatr (jak `npm.cmd run pois`) + panorama horyzontu i widoczność szczytów w `src/lib/` z testami na zestawie testowym.
+1. ✅ Zapis dodatkowych pól EXIF przy imporcie (mała zmiana, od razu).
+2. ✅ Skrypt przygotowania DEM Tatr (`npm.cmd run dem`) + panorama horyzontu i widoczność szczytów w `src/lib/` (`dem.ts`, `horizon.ts`) z testami na sztucznym terenie. Do zrobienia: test na prawdziwych zdjęciach z Tatr.
 3. Ekran zdjęcia: etykiety szczytów z EXIF + ręczne dopasowanie; zapis wyniku.
 4. Automatyczne dopasowanie linii nieba (JS), z miarą pewności.
 5. Tryb na żywo z kamery (ten sam silnik, kierunek z czujników).

@@ -3,6 +3,9 @@
 # dependencies
 node_modules/
 
+# pobrane pliki danych (npm run dem)
+.cache/
+
 # Expo
 .expo/
 dist/

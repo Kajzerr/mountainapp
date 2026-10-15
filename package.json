@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "geotiff": "^3.0.5",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -34,7 +35,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "pois": "node scripts/fetch-pois.mjs"
+    "pois": "node scripts/fetch-pois.mjs",
+    "dem": "node scripts/fetch-dem.mjs"
   },
   "private": true
 }
