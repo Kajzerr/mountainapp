@@ -41,6 +41,7 @@ export const pl: Dict = {
 
   screens: {
     photo: 'Zdjęcie',
+    trip: 'Planowana trasa',
     locate: 'Ustaw miejsce',
     theme: 'Motyw',
     language: 'Język',
@@ -105,6 +106,51 @@ export const pl: Dict = {
     confirm: 'Ustaw miejsce tutaj',
   },
 
+  poi: {
+    kinds: {
+      peak: 'Szczyt', saddle: 'Przełęcz', hut: 'Schronisko', trailhead: 'Początek szlaku', lake: 'Jezioro', junction: 'Rozdroże',
+    },
+    ele: (m) => `${m} m n.p.m.`,
+    close: 'Zamknij',
+    setStart: 'Początek',
+    setEnd: 'Koniec',
+    addVia: 'Punkt trasy',
+    viaPosition: 'Wybierz jego miejsce na trasie:',
+    viaN: (n) => `${n}.`,
+    remove: 'Usuń z trasy',
+    inTrip: (role) => `Na Twojej trasie: ${role}`,
+    loading: 'Wczytuję szczyty, przełęcze i schroniska…',
+    error: 'Nie udało się wczytać szczytów i schronisk. Sprawdź połączenie z internetem.',
+    retry: 'Ponów',
+    zoomIn: 'Przybliż mapę, żeby zobaczyć szczyty, przełęcze i schroniska',
+  },
+
+  trip: {
+    start: 'Początek',
+    end: 'Koniec',
+    via: (n) => `Punkt ${n}`,
+    km: (m) => `${(m / 1000).toFixed(1).replace('.', ',')} km`,
+    up: (m) => `↑ ${m} m`,
+    down: (m) => `↓ ${m} m`,
+    time: (t) => `ok. ${t} h`,
+    computing: 'Wyznaczam trasę po szlakach…',
+    approx: 'Brak połączenia z planerem tras – linie proste między punktami.',
+    needMore: 'Dodaj jeszcze jeden punkt, żeby zobaczyć trasę.',
+    open: 'Szczegóły trasy',
+    show: 'Pokaż trasę',
+    reverse: 'Odwróć trasę',
+    clear: 'Wyczyść trasę',
+    clearTitle: 'Wyczyścić trasę?',
+    clearText: 'Wszystkie punkty zostaną usunięte z planowanej trasy.',
+    moveUp: (name) => `Przesuń ${name} wcześniej`,
+    moveDown: (name) => `Przesuń ${name} później`,
+    removePoint: (name) => `Usuń ${name}`,
+    empty: 'Nie ma jeszcze trasy',
+    emptyHint: 'Przybliż mapę, dotknij szczytu, przełęczy, schroniska albo początku szlaku i dodaj go jako początek, koniec lub punkt trasy.',
+    timeNote: 'Czas przejścia bez postojów, szacowany z długości i przewyższeń (podobnie jak na tabliczkach). Trasa: BRouter, © autorzy OpenStreetMap.',
+    retry: 'Spróbuj ponownie',
+  },
+
   menu: {
     settings: 'USTAWIENIA',
     about: 'INFORMACJE',
@@ -114,9 +160,12 @@ export const pl: Dict = {
     layerTopo: 'Topograficzna',
     layerStandard: 'Zwykła',
     sources: 'Dane mapy',
+    refreshPois: 'Odśwież szczyty i schroniska',
+    refreshPoisSub: (n) => `${plural(n, 'punkt', 'punkty', 'punktów')} z OpenStreetMap`,
     sourcesText:
       'Mapa i szlaki: © autorzy OpenStreetMap (ODbL). Mapa topograficzna: OpenTopoMap (CC-BY-SA). ' +
-      'Znakowane szlaki: waymarkedtrails.org (CC-BY-SA). Obejrzane fragmenty mapy zostają w telefonie.',
+      'Znakowane szlaki: waymarkedtrails.org (CC-BY-SA). Szczyty, przełęcze i schroniska: OpenStreetMap. ' +
+      'Wyznaczanie tras: BRouter (brouter.de). Obejrzane fragmenty mapy zostają w telefonie.',
   },
 
   theme: {

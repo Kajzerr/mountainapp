@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { ComponentProps } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { usePois } from '../../lib/poiStore';
 import { useSettings, useT } from '../../lib/settings';
 import { Colors, fonts, themeName, useColors } from '../../lib/theme';
 
@@ -11,6 +12,7 @@ type IconName = ComponentProps<typeof Ionicons>['name'];
 export default function MenuScreen() {
   const colors = useColors();
   const { settings, setSetting } = useSettings();
+  const { pois, status: poiStatus, errorDetail, refresh: refreshPois } = usePois();
   const t = useT();
   const m = t.menu;
   const languageSubtitle =
@@ -46,6 +48,19 @@ export default function MenuScreen() {
       />
 
       <Section title={m.about} colors={colors} />
+      <NavRow
+        colors={colors}
+        icon="refresh-outline"
+        title={m.refreshPois}
+        subtitle={
+          poiStatus === 'loading'
+            ? t.poi.loading
+            : poiStatus === 'error'
+              ? `${t.poi.error}${errorDetail ? ` (${errorDetail})` : ''}`
+              : m.refreshPoisSub(pois.length)
+        }
+        onPress={refreshPois}
+      />
       <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
         <View style={styles.choiceHead}>
           <IconBox icon="map-outline" colors={colors} />

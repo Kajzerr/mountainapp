@@ -9,8 +9,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Appearance, View } from 'react-native';
 import { PhotosProvider } from '../lib/photos';
+import { PoisProvider } from '../lib/poiStore';
 import { SettingsProvider, useSettings, useT } from '../lib/settings';
 import { fonts, PALETTES, useTheme } from '../lib/theme';
+import { TripProvider } from '../lib/tripStore';
 
 /** Ustawienia muszą być dostępne zanim cokolwiek wybierze kolory. */
 export default function RootLayout() {
@@ -21,7 +23,7 @@ export default function RootLayout() {
   );
 }
 
-/** Główny nawigator: zakładki + ekrany zdjęć + ekrany z Menu. */
+/** Główny nawigator: zakładki + ekrany zdjęć i trasy + ekrany z Menu. */
 function AppNavigator() {
   const { colors, dark } = useTheme();
   const { settings, loaded: settingsLoaded } = useSettings();
@@ -58,21 +60,26 @@ function AppNavigator() {
   return (
     <ThemeProvider value={theme}>
       <PhotosProvider>
-        <Stack
-          screenOptions={{
-            headerBackTitle: t.common.back,
-            headerTitleStyle: { fontFamily: fonts.semibold },
-            headerShadowVisible: false,
-          }}
-        >
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="place" options={{ title: '' }} />
-          <Stack.Screen name="photo" options={{ title: t.screens.photo }} />
-          <Stack.Screen name="locate" options={{ presentation: 'modal', title: t.screens.locate }} />
-          <Stack.Screen name="theme" options={{ title: t.screens.theme }} />
-          <Stack.Screen name="language" options={{ title: t.screens.language }} />
-        </Stack>
-        <StatusBar style={dark ? 'light' : 'dark'} />
+        <PoisProvider>
+          <TripProvider>
+            <Stack
+              screenOptions={{
+                headerBackTitle: t.common.back,
+                headerTitleStyle: { fontFamily: fonts.semibold },
+                headerShadowVisible: false,
+              }}
+            >
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="place" options={{ title: '' }} />
+              <Stack.Screen name="photo" options={{ title: t.screens.photo }} />
+              <Stack.Screen name="locate" options={{ presentation: 'modal', title: t.screens.locate }} />
+              <Stack.Screen name="trip" options={{ title: t.screens.trip }} />
+              <Stack.Screen name="theme" options={{ title: t.screens.theme }} />
+              <Stack.Screen name="language" options={{ title: t.screens.language }} />
+            </Stack>
+            <StatusBar style={dark ? 'light' : 'dark'} />
+          </TripProvider>
+        </PoisProvider>
       </PhotosProvider>
     </ThemeProvider>
   );

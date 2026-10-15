@@ -113,3 +113,20 @@ export const fonts = {
   semibold: 'Sora_600SemiBold',
   bold: 'Sora_700Bold',
 };
+
+/**
+ * Kolory punktów na mapie – wspólne dla wszystkich motywów, bo sama mapa wygląda tak samo w każdym motywie.
+ * Dobrane tak, żeby odróżniały się od kolorów znakowania szlaków (czerwony, niebieski, zielony, żółty, czarny).
+ */
+export const POI_COLORS = {
+  peak: '#7A4A21',
+  saddle: '#B07A3B',
+  hut: '#C2185B',
+  trailhead: '#6A1B9A',
+  lake: '#0277BD',
+  junction: '#546E7A',
+  /** Obwódka znaczników i tekst na nich */
+  outline: '#FFFFFF',
+  /** Linia planowanej trasy */
+  route: '#FF6D00',
+} as const;

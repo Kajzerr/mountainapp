@@ -1,0 +1,10 @@
+{
+  "_comment": "Zapytanie Overpass o punkty planowania tras. Używane przez aplikację (src/lib/pois.ts) i scripts/fetch-pois.mjs.",
+  "bbox": [
+    49.05,
+    19.65,
+    49.36,
+    20.4
+  ],
+  "query": "[out:json][timeout:90];\n(\n  node[\"natural\"=\"peak\"][\"name\"]({{bbox}});\n  node[\"natural\"=\"saddle\"][\"name\"]({{bbox}});\n  node[\"mountain_pass\"=\"yes\"][\"name\"]({{bbox}});\n  nwr[\"tourism\"=\"alpine_hut\"][\"name\"]({{bbox}});\n  node[\"highway\"=\"trailhead\"][\"name\"]({{bbox}});\n  node[\"tourism\"=\"information\"][\"information\"=\"guidepost\"][\"name\"]({{bbox}});\n  way[\"natural\"=\"water\"][\"name\"]({{bbox}});\n);\nout center tags;"
+}

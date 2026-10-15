@@ -33,7 +33,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "pois": "node scripts/fetch-pois.mjs"
   },
   "private": true
 }

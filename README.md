@@ -18,6 +18,9 @@ Zeskanuj kod QR w Expo Go.
 - Dodawanie zdjęć z galerii: lokalizacja i data z EXIF, zdjęcia z jednego miejsca (do 40 m) w jednym znaczniku.
 - Zdjęcia bez GPS: ręczne wskazanie miejsca na mapie.
 - Galeria miejsca, podgląd zdjęcia, zmiana miejsca, usuwanie.
+- Planowanie trasy: dotknij szczytu, przełęczy, schroniska, jeziora albo początku szlaku i ustaw go jako początek,
+  koniec albo punkt trasy na wybranym miejscu. Trasa liczy się po szlakach (BRouter) z długością, przewyższeniami
+  i czasem przejścia; kolejność punktów zmienisz na ekranie trasy.
 - Polski i angielski, motywy jak w DailyPlanner.
 
 Dalsze kroki: `PLAN.md`.

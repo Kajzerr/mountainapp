@@ -1,6 +1,6 @@
 import { ReactNode, Ref } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
-import MapView, { Region, UrlTile } from 'react-native-maps';
+import MapView, { MapPressEvent, Region, UrlTile } from 'react-native-maps';
 import { TATRY_REGION, TILE_CACHE_MAX_AGE_S, TOPO_TILES, TRAIL_TILES } from '../lib/mapConfig';
 import { tileCacheDir } from '../lib/photoFiles';
 import { useSettings, useT } from '../lib/settings';
@@ -11,6 +11,7 @@ type Props = {
   initialRegion?: Region;
   showsUserLocation?: boolean;
   onRegionChangeComplete?: (region: Region) => void;
+  onPress?: (e: MapPressEvent) => void;
   children?: ReactNode;
 };
 
@@ -18,7 +19,7 @@ type Props = {
  * Mapa Tatr: podkład (topograficzny z OpenTopoMap albo systemowy) + nakładka ze znakowanymi szlakami.
  * Działa w Expo Go (react-native-maps: Apple Maps na iOS, Google Maps na Androidzie).
  */
-export function TrailMap({ mapRef, initialRegion = TATRY_REGION, showsUserLocation, onRegionChangeComplete, children }: Props) {
+export function TrailMap({ mapRef, initialRegion = TATRY_REGION, showsUserLocation, onRegionChangeComplete, onPress, children }: Props) {
   const { settings } = useSettings();
   const { colors, dark } = useTheme();
   const t = useT();
@@ -41,6 +42,7 @@ export function TrailMap({ mapRef, initialRegion = TATRY_REGION, showsUserLocati
         toolbarEnabled={false}
         pitchEnabled={false}
         onRegionChangeComplete={onRegionChangeComplete}
+        onPress={onPress}
       >
         {topo && (
           <UrlTile

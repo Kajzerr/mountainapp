@@ -35,6 +35,7 @@ export const en = {
 
   screens: {
     photo: 'Photo',
+    trip: 'Planned route',
     locate: 'Set location',
     theme: 'Theme',
     language: 'Language',
@@ -99,6 +100,51 @@ export const en = {
     confirm: 'Set location here',
   },
 
+  poi: {
+    kinds: {
+      peak: 'Peak', saddle: 'Pass', hut: 'Mountain hut', trailhead: 'Trailhead', lake: 'Lake', junction: 'Trail junction',
+    },
+    ele: (m: number) => `${m} m`,
+    close: 'Close',
+    setStart: 'Start',
+    setEnd: 'Finish',
+    addVia: 'Waypoint',
+    viaPosition: 'Choose its place on the route:',
+    viaN: (n: number) => `${n}.`,
+    remove: 'Remove from route',
+    inTrip: (role: string) => `On your route: ${role}`,
+    loading: 'Loading peaks, passes and huts…',
+    error: 'Could not load peaks and huts. Check the internet connection.',
+    retry: 'Retry',
+    zoomIn: 'Zoom in to see peaks, passes and huts',
+  },
+
+  trip: {
+    start: 'Start',
+    end: 'Finish',
+    via: (n: number) => `Waypoint ${n}`,
+    km: (m: number) => `${(m / 1000).toFixed(1)} km`,
+    up: (m: number) => `↑ ${m} m`,
+    down: (m: number) => `↓ ${m} m`,
+    time: (t: string) => `~${t} h`,
+    computing: 'Planning route along trails…',
+    approx: 'No connection to the route planner – straight lines between points.',
+    needMore: 'Add one more point to see the route.',
+    open: 'Route details',
+    show: 'Show route',
+    reverse: 'Reverse route',
+    clear: 'Clear route',
+    clearTitle: 'Clear the route?',
+    clearText: 'All points will be removed from the planned route.',
+    moveUp: (name: string) => `Move ${name} earlier`,
+    moveDown: (name: string) => `Move ${name} later`,
+    removePoint: (name: string) => `Remove ${name}`,
+    empty: 'No route yet',
+    emptyHint: 'Zoom in on the map, tap a peak, pass, hut or trailhead and add it as the start, finish or a waypoint.',
+    timeNote: 'Walking time without breaks, estimated from distance and climb (like trail signs). Routing: BRouter, © OpenStreetMap contributors.',
+    retry: 'Try again',
+  },
+
   menu: {
     settings: 'SETTINGS',
     about: 'ABOUT',
@@ -108,9 +154,12 @@ export const en = {
     layerTopo: 'Topographic',
     layerStandard: 'Standard',
     sources: 'Map data',
+    refreshPois: 'Refresh peaks and huts',
+    refreshPoisSub: (n: number) => `${n} points from OpenStreetMap`,
     sourcesText:
       'Map and trails: © OpenStreetMap contributors (ODbL). Topographic map: OpenTopoMap (CC-BY-SA). ' +
-      'Marked trails: waymarkedtrails.org (CC-BY-SA). Map tiles you have viewed are kept on the phone.',
+      'Marked trails: waymarkedtrails.org (CC-BY-SA). Peaks, passes and huts: OpenStreetMap. ' +
+      'Route planning: BRouter (brouter.de). Map tiles you have viewed are kept on the phone.',
   },
 
   theme: {

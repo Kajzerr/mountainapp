@@ -1,6 +1,8 @@
 # MountainApp: plan aplikacji tatrzańskiej
 
-Stan (2026-10-14): zrobiona pierwsza wersja kroków 1–2 – mapa ze szlakami (online, kafelki zapamiętywane w telefonie), zdjęcia z GPS na mapie, galeria miejsca, ręczne ustawianie miejsca zdjęć bez GPS.
+Stan (2026-10-14): zrobiona pierwsza wersja kroków 1–2 – mapa ze szlakami (online, kafelki zapamiętywane w telefonie), zdjęcia z GPS na mapie, galeria miejsca, ręczne ustawianie miejsca zdjęć bez GPS. Pierwsza wersja kroku 5 – planowanie trasy z punktów charakterystycznych (OSM przez Overpass API, pobierane raz do telefonu) i trasa po szlakach z BRouter (brouter.de).
+
+**Przed publikacją w sklepach** (zależności od darmowych serwerów): kafelki mapy (OpenTopoMap, Waymarked Trails), punkty (Overpass API – zastąpić plikiem dołączonym do aplikacji), wyznaczanie tras (brouter.de – własny serwer BRouter albo routing offline). Zamknięcia szlaków TANAP (1 XI – 15 VI) i TPN jeszcze nie są uwzględniane.
 
 ## 1. Rozpoznawanie szczytów ze zdjęcia: czy to wykonalne?
 
