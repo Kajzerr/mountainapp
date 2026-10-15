@@ -80,7 +80,7 @@ src/lib/
 ```
 
 ## Model danych i zasady
-- `Photo`: `{ id, file, width, height, latitude?, longitude?, takenAt?, direction?, source?, importedAt }`.
+- `Photo`: `{ id, file, width, height, latitude?, longitude?, takenAt?, direction?, directionRef?, altitude?, gpsError?, focal35?, focal?, orientation?, make?, model?, lens?, source?, importedAt }`. Pola od `directionRef` do `lens` (PLAN.md 7.1) zapisujemy tylko, gdy są w EXIF; starsze zdjęcia ich nie mają.
   `file` to **sama nazwa pliku** w `Paths.document/photos` (pełny adres liczy `photoUri`) – na iOS ścieżka katalogu
   aplikacji zmienia się po aktualizacji. `latitude`/`longitude` – oba albo żadne (`hasLocation`).
   Daty jako tekst `"RRRR-MM-DDTGG:MM:SS"` (czas lokalny), bez obiektów `Date` w danych.

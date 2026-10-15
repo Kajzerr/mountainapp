@@ -82,3 +82,98 @@ export function directionFromExif(exif: Exif | null | undefined): number | undef
   const n = exifNumber(exif.GPSImgDirection ?? gpsDict(exif).ImgDirection);
   return n !== null && n >= 0 && n <= 360 ? n : undefined;
 }
+
+// ---- Dane do przyszłego rozpoznawania szczytów (PLAN.md, punkt 7.1) ----
+// Nazwy kluczy na iOS pochodzą z ImageIO (np. "FocalLenIn35mmFilm"), na Androidzie z ExifInterface
+// ("FocalLengthIn35mmFilm"), więc sprawdzamy obie. iOS kopiuje słownik {GPS} do kluczy "GPS<nazwa>",
+// a słownik {TIFF} (Make, Model, Orientation) dokleja do głównego poziomu.
+
+function nestedDict(exif: Exif, key: string): Exif {
+  const d = exif[key];
+  return d && typeof d === 'object' && !Array.isArray(d) ? (d as Exif) : {};
+}
+
+/** Pierwsza wartość spośród kluczy, szukana na głównym poziomie i w słownikach {Exif}, {TIFF}, {ExifAux}. */
+function pick(exif: Exif, keys: string[]): unknown {
+  const dicts = [exif, nestedDict(exif, '{Exif}'), nestedDict(exif, '{TIFF}'), nestedDict(exif, '{ExifAux}')];
+  for (const dict of dicts) {
+    for (const key of keys) {
+      const value = dict[key];
+      if (value !== undefined && value !== null && value !== '') return value;
+    }
+  }
+  return undefined;
+}
+
+function text(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  // Niektóre aparaty dopełniają tekst zerami albo spacjami
+  const t = value.replace(/\0/g, '').trim();
+  return t || undefined;
+}
+
+/**
+ * Wysokość n.p.m. w metrach. GPSAltitudeRef = 1 oznacza „poniżej poziomu morza” – zmienia znak tylko wartości
+ * dodatniej, bo Android podaje już wysokość ze znakiem. Android wpisuje 0, gdy zdjęcie ma pozycję, ale nie ma
+ * wysokości, więc 0 traktujemy jak brak danych (w Tatrach i tak nie występuje).
+ */
+export function altitudeFromExif(exif: Exif | null | undefined): number | undefined {
+  if (!exif) return undefined;
+  const gps = gpsDict(exif);
+  const n = exifNumber(exif.GPSAltitude ?? gps.Altitude);
+  if (n === null || n === 0) return undefined;
+  const ref = exif.GPSAltitudeRef ?? gps.AltitudeRef;
+  const below = ref === 1 || (typeof ref === 'string' && ref.trim() === '1');
+  const altitude = n > 0 && below ? -n : n;
+  return altitude >= -500 && altitude <= 9000 ? altitude : undefined;
+}
+
+/** Do czego odnosi się kierunek aparatu: "T" – północ geograficzna, "M" – magnetyczna. */
+export function directionRefFromExif(exif: Exif | null | undefined): 'T' | 'M' | undefined {
+  if (!exif) return undefined;
+  const ref = text(exif.GPSImgDirectionRef ?? gpsDict(exif).ImgDirectionRef)?.toUpperCase();
+  return ref === 'T' || ref === 'M' ? ref : undefined;
+}
+
+/** Ogniskowa przeliczona na pełną klatkę 35 mm (z niej liczy się kąt widzenia). */
+export function focalLength35FromExif(exif: Exif | null | undefined): number | undefined {
+  if (!exif) return undefined;
+  const n = exifNumber(pick(exif, ['FocalLenIn35mmFilm', 'FocalLengthIn35mmFilm']));
+  return n !== null && n > 0 && n <= 5000 ? n : undefined;
+}
+
+/** Rzeczywista ogniskowa obiektywu w mm (bez przeliczenia na 35 mm). */
+export function focalLengthFromExif(exif: Exif | null | undefined): number | undefined {
+  if (!exif) return undefined;
+  const n = exifNumber(pick(exif, ['FocalLength']));
+  return n !== null && n > 0 && n <= 5000 ? n : undefined;
+}
+
+/** Szacowany błąd pozycji GPS w metrach. */
+export function positioningErrorFromExif(exif: Exif | null | undefined): number | undefined {
+  if (!exif) return undefined;
+  const n = exifNumber(exif.GPSHPositioningError ?? gpsDict(exif).HPositioningError);
+  return n !== null && n >= 0 ? n : undefined;
+}
+
+/** Orientacja zdjęcia z EXIF (1–8; 6 i 8 to zdjęcie obrócone o 90°). */
+export function orientationFromExif(exif: Exif | null | undefined): number | undefined {
+  if (!exif) return undefined;
+  const n = exifNumber(pick(exif, ['Orientation']));
+  return n !== null && Number.isInteger(n) && n >= 1 && n <= 8 ? n : undefined;
+}
+
+export type CameraInfo = { make?: string; model?: string; lens?: string };
+
+/** Producent, model aparatu i obiektyw – puste pola pomijamy. */
+export function cameraFromExif(exif: Exif | null | undefined): CameraInfo {
+  if (!exif) return {};
+  const info: CameraInfo = {};
+  const make = text(pick(exif, ['Make']));
+  const model = text(pick(exif, ['Model']));
+  const lens = text(pick(exif, ['LensModel']));
+  if (make) info.make = make;
+  if (model) info.model = model;
+  if (lens) info.lens = lens;
+  return info;
+}

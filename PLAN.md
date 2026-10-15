@@ -93,4 +93,63 @@ Kroki 1–2 to użyteczna aplikacja; krok 3 to najlepszy test wykonalności rozp
 
 - ~~Platformy i framework~~: ustalone, Android + iOS, stack jak w DailyPlanner.
 - ~~Folder i identyfikator~~: ustalone, `C:\Users\User\Desktop\Projekty\MountainApp`, `com.massifmobile.mountainmap`; commity i push robisz Ty.
-- Od którego kroku zaczynamy.
+- ~~Od którego kroku zaczynamy~~: ustalone, mapa ze szlakami i zdjęciami, potem planowanie trasy.
+
+## 7. Podpisy szczytów na zaimportowanych zdjęciach (szczegółowy plan, 2026-10-15)
+
+Pomysł: aplikacja sama dopisuje do zdjęcia nazwy widocznych szczytów. Etap 1 to geometria (miejsce, wysokość, kierunek), etap 2 to wygląd (dopasowanie tego, co widać na zdjęciu). Ta kolejność jest właściwa: etap 1 daje „co *może* być widać i mniej więcej gdzie”, a etap 2 koryguje błędy kompasu i potwierdza, co faktycznie jest na kadrze.
+
+### 7.1. Dane ze zdjęcia: zacząć zapisywać już teraz
+
+Obecnie przy imporcie zapisujemy pozycję, datę i kierunek (`direction`). Warto od razu dopisać do modelu `Photo` (pola opcjonalne, zgodne wstecz):
+
+| Pole EXIF | Po co | Uwagi |
+|---|---|---|
+| `GPSAltitude` (+ `GPSAltitudeRef`) | wysokość obserwatora | GPS myli się o 10–50 m – patrz 7.2 |
+| `GPSImgDirectionRef` | czy kierunek jest geograficzny (`T`) czy magnetyczny (`M`) | dla `M` dodać deklinację (w Tatrach ok. +6° na wschód) |
+| `FocalLengthIn35mmFilm` (albo `FocalLength` + typ aparatu) | kąt widzenia kadru | 26 mm ≈ 69° w poziomie; bez tego zgadujemy z modelu telefonu |
+| `PixelXDimension` / `PixelYDimension`, orientacja | pion/poziom, proporcje | już mamy szerokość i wysokość |
+| `GPSHPositioningError` | dokładność pozycji | do oceny pewności wyniku |
+| `Make` / `Model` / `LensModel` | ogniskowa, gdy jej brak; teleobiektyw vs szeroki kąt | iPhone ma kilka obiektywów |
+
+Bez tych danych każde zdjęcie zaimportowane dziś trzeba by później wczytać ponownie.
+
+### 7.2. Etap 1: geometria (to sedno funkcji)
+
+1. **Model terenu (DEM):** Copernicus GLO-30 dla obszaru ok. 49.0–49.6° N, 19.4–20.6° E (z buforem, żeby widzieć Babią Górę, Pieniny, Niżne Tatry). Przycięty i zapisany jako 16-bitowa siatka to kilka MB, do dołączenia do aplikacji (jak plik punktów). Dane są darmowe także komercyjnie, z podpisem źródła.
+2. **Wysokość obserwatora:** brać wysokość terenu z DEM w miejscu zdjęcia + ok. 1,7 m. Wysokość z GPS tylko wtedy, gdy jest wyraźnie wyżej (np. wieża widokowa). GPS w pionie jest za mało dokładny.
+3. **Panorama horyzontu:** dla każdego azymutu co 0,1° promień przez DEM (z krzywizną Ziemi i refrakcją) → kąt horyzontu i odległość. W TypeScript to ułamek sekundy do 1–2 s na telefonie. Czysta funkcja w `src/lib/`, testowalna w Node, jak `trip.ts`.
+4. **Widoczne szczyty:** szczyt z bazy (mamy je już z OSM, z wysokościami) jest widoczny, jeśli jego kąt elewacji ≥ horyzont na tym azymucie bliżej obserwatora. Odrzucać szczyty „wtopione” w grzbiet (różnica < 0,2°) i bardzo dalekie, mało wybitne.
+5. **Kadr:** z kierunku i kąta widzenia wybieramy szczyty w kadrze i liczymy ich pozycję x na zdjęciu. Wysokość (y) z kąta elewacji; nachylenie telefonu w EXIF zwykle nie jest zapisane, więc y dopasowujemy w etapie 2 albo ręcznie.
+6. **Brak kierunku w EXIF** (częste na Androidzie): pokazujemy panoramę 360° z listą „widocznych stąd szczytów” i od razu prosimy o wskazanie jednego szczytu na zdjęciu albo przesunięcie panoramy. Etap 2 może wtedy szukać dopasowania w pełnych 360°.
+
+### 7.3. Etap 2: „wygląd” = dopasowanie linii nieba, nie rozpoznawanie szczytów przez AI
+
+Zamiast sieci, która „zna” wygląd Giewontu (brak danych treningowych, każdy szczyt wygląda inaczej z każdej strony), porównujemy **kształt linii horyzontu**:
+
+1. Na zdjęciu zmniejszonym do ok. 512 px szerokości wyznaczamy linię nieba: dla każdej kolumny najwyższy punkt, gdzie kończy się niebo. Na start wystarczy jasność i kolor nieba oraz krawędzie (czysty JS, działa w Expo Go: `expo-image-manipulator` do zmniejszenia + dekodowanie JPEG w JS). Później lepszy model segmentacji nieba (TFLite/CoreML), ale on wymaga własnego buildu natywnego.
+2. Szukamy przesunięcia azymutu (±20° wokół kompasu, albo 360° bez kompasu), skali (kąt widzenia ±10%), przesunięcia w pionie i lekkiego obrotu, przy których linia ze zdjęcia najlepiej pokrywa się z linią z DEM (korelacja 1D).
+3. Wynik ma **miarę pewności**. Przy słabym dopasowaniu (chmury, mgła, las na pierwszym planie, zdjęcie w dolinie) nie zgadujemy, tylko prosimy o ręczne dopasowanie.
+
+### 7.4. Interfejs
+
+- Na zdjęciu etykiety: nazwa, wysokość, odległość („Gerlach 2655 m · 18 km”), kreska do wierzchołka.
+- **Ręczne dopasowanie zawsze dostępne:** przesuwanie i rozciąganie nałożonej linii palcem; to pewny wynik niezależnie od jakości danych.
+- Po zatwierdzeniu zapisujemy przy zdjęciu listę szczytów (id z OSM + pozycja na zdjęciu), plus korektę kierunku. Dzięki temu można później szukać zdjęć „z widokiem na Lodowy” i pokazać na mapie, skąd widać dany szczyt.
+
+### 7.5. Ryzyka i wskazówki
+
+- **Najpierw zestaw testowy:** 20–30 własnych zdjęć z różnych miejsc, z ręcznie wpisanymi szczytami. Każdą zmianę algorytmu mierzymy na nim (ile szczytów trafionych, o ile stopni błąd). Bez tego trudno ocenić, czy coś działa.
+- Kompas w telefonie: typowo 5–15° błędu, czasem więcej przy metalowych przedmiotach. Przy kącie widzenia ok. 70° to przesunięcie etykiet nawet o 1/5 kadru, dlatego etap 2 albo ręczna korekta są konieczne.
+- Zdjęcia z zoomem, przycięte albo panoramiczne: kąt widzenia z EXIF nie pasuje do kadru → szukać skali w etapie 2 albo pytać.
+- Bliskie obiekty (drzewa, ludzie, schronisko) zasłaniają horyzont: dopasowanie linii nieba musi umieć pominąć fragmenty.
+- Wydajność: horyzont liczyć raz dla miejsca zdjęcia i zapisywać; zdjęcia z jednego miejsca dzielą wynik.
+
+### 7.6. Kolejność prac
+
+1. Zapis dodatkowych pól EXIF przy imporcie (mała zmiana, od razu).
+2. Skrypt przygotowania DEM Tatr (jak `npm.cmd run pois`) + panorama horyzontu i widoczność szczytów w `src/lib/` z testami na zestawie testowym.
+3. Ekran zdjęcia: etykiety szczytów z EXIF + ręczne dopasowanie; zapis wyniku.
+4. Automatyczne dopasowanie linii nieba (JS), z miarą pewności.
+5. Tryb na żywo z kamery (ten sam silnik, kierunek z czujników).
+6. Wyszukiwanie zdjęć po szczytach, „skąd widać ten szczyt” na mapie.

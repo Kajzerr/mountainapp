@@ -1,5 +1,16 @@
 // Model zdjęcia i odczyt zapisanych danych. Czyste funkcje, bez Reacta i bez modułów Expo (testowalne w Node).
-import { directionFromExif, gpsFromExif, takenAtFromExif } from './exif';
+import {
+  altitudeFromExif,
+  cameraFromExif,
+  directionFromExif,
+  directionRefFromExif,
+  focalLength35FromExif,
+  focalLengthFromExif,
+  gpsFromExif,
+  orientationFromExif,
+  positioningErrorFromExif,
+  takenAtFromExif,
+} from './exif';
 import { photoTime } from './places';
 
 export type Photo = {
@@ -15,6 +26,21 @@ export type Photo = {
   takenAt?: string;
   /** Kierunek aparatu w stopniach od północy (z EXIF), na później – rozpoznawanie szczytów */
   direction?: number;
+  /** "T" – kierunek względem północy geograficznej, "M" – magnetycznej */
+  directionRef?: 'T' | 'M';
+  /** Wysokość n.p.m. w metrach z GPS telefonu */
+  altitude?: number;
+  /** Szacowany błąd pozycji GPS w metrach */
+  gpsError?: number;
+  /** Ogniskowa przeliczona na 35 mm (kąt widzenia) i rzeczywista ogniskowa w mm */
+  focal35?: number;
+  focal?: number;
+  /** Orientacja z EXIF (1–8) */
+  orientation?: number;
+  /** Aparat: producent, model, obiektyw */
+  make?: string;
+  model?: string;
+  lens?: string;
   /** Rozpoznanie duplikatu: id zdjęcia w galerii telefonu albo nazwa pliku + data */
   source?: string;
   /** Moment dodania do aplikacji, "RRRR-MM-DDTGG:MM:SS" */
@@ -56,6 +82,20 @@ export function photoFromAsset(asset: PickedAsset, id: string, file: string, imp
   }
   if (takenAt) photo.takenAt = takenAt;
   if (direction !== undefined) photo.direction = direction;
+  // Dane do przyszłego rozpoznawania szczytów (PLAN.md, punkt 7.1); zapisujemy tylko te, które są w EXIF
+  const exif = asset.exif;
+  const extra: Partial<Photo> = {
+    directionRef: directionRefFromExif(exif),
+    altitude: altitudeFromExif(exif),
+    gpsError: positioningErrorFromExif(exif),
+    focal35: focalLength35FromExif(exif),
+    focal: focalLengthFromExif(exif),
+    orientation: orientationFromExif(exif),
+    ...cameraFromExif(exif),
+  };
+  for (const [key, value] of Object.entries(extra)) {
+    if (value !== undefined) (photo as Record<string, unknown>)[key] = value;
+  }
   const source = sourceKey(asset, takenAt);
   if (source) photo.source = source;
   return photo;
