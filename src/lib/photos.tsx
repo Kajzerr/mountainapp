@@ -27,6 +27,8 @@ type PhotosContextValue = {
   byId: Map<string, Photo>;
   importAssets: (assets: PickedAsset[]) => Promise<ImportResult>;
   setLocation: (ids: string[], point: GeoPoint) => void;
+  /** Uzupełnia dane zdjęcia (np. dane z pliku albo ręczną poprawkę podpisów szczytów) */
+  updatePhoto: (id: string, patch: Partial<Omit<Photo, 'id' | 'file'>>) => void;
   removePhoto: (id: string) => void;
 };
 
@@ -96,6 +98,13 @@ export function PhotosProvider({ children }: { children: ReactNode }) {
     [update],
   );
 
+  const updatePhoto = useCallback(
+    (id: string, patch: Partial<Omit<Photo, 'id' | 'file'>>) => {
+      update((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+    },
+    [update],
+  );
+
   const removePhoto = useCallback(
     (id: string) => {
       const photo = photosRef.current.find((p) => p.id === id);
@@ -115,9 +124,10 @@ export function PhotosProvider({ children }: { children: ReactNode }) {
       byId: new Map(photos.map((p) => [p.id, p])),
       importAssets,
       setLocation,
+      updatePhoto,
       removePhoto,
     };
-  }, [photos, loaded, importAssets, setLocation, removePhoto]);
+  }, [photos, loaded, importAssets, setLocation, updatePhoto, removePhoto]);
 
   return <PhotosContext.Provider value={value}>{children}</PhotosContext.Provider>;
 }

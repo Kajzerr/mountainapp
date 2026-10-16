@@ -149,7 +149,13 @@ Zamiast sieci, która „zna” wygląd Giewontu (brak danych treningowych, każ
 
 1. ✅ Zapis dodatkowych pól EXIF przy imporcie (mała zmiana, od razu).
 2. ✅ Skrypt przygotowania DEM Tatr (`npm.cmd run dem`) + panorama horyzontu i widoczność szczytów w `src/lib/` (`dem.ts`, `horizon.ts`) z testami na sztucznym terenie. Do zrobienia: test na prawdziwych zdjęciach z Tatr.
-3. Ekran zdjęcia: etykiety szczytów z EXIF + ręczne dopasowanie; zapis wyniku.
+3. ✅ (do sprawdzenia na telefonie) Ekran zdjęcia: etykiety szczytów z EXIF + ręczne dopasowanie; zapis wyniku. Nachylenie i obrót z MakerNote iPhone'a (`exifFile.ts`), od 5 szczytów same kropki – nazwa po dotknięciu.
+   Wnioski z testu na 25 zdjęciach z iPhone'a 15 Pro (2026-10-16): azymut z EXIF trafia z dokładnością 0–6°;
+   brak nachylenia telefonu przesuwa linię horyzontu w pionie nawet o 12°. iPhone zapisuje wektor grawitacji
+   w MakerNote Apple (tag 8, AccelerationVector: pochylenie = asin(z), obrót z x/y) – zgadza się z obserwowanym
+   przesunięciem. expo-image-picker go nie przekazuje → przy imporcie czytać go z pliku (np. exifr, czysty JS).
+   Z jednego miejsca widać do ~60 nazwanych turni → pokazywać ok. 10 najważniejszych (kąt nad horyzontem,
+   wysokość, odległość). Skały bliżej niż ~100 m nie są w siatce 90 m.
 4. Automatyczne dopasowanie linii nieba (JS), z miarą pewności.
 5. Tryb na żywo z kamery (ten sam silnik, kierunek z czujników).
 6. Wyszukiwanie zdjęć po szczytach, „skąd widać ten szczyt” na mapie.

@@ -63,33 +63,47 @@ function rayMax(dem: Dem, o: Observer, azimuth: number, from: number, to: number
 }
 
 export type Horizon = {
-  /** Co ile stopni azymutu; indeks i = azymut i·step */
+  /** Co ile stopni azymutu; indeks i = azymut from + i·step */
   step: number;
+  /** Azymut pierwszej próbki (stopnie) – 0 dla pełnej panoramy */
+  from: number;
   /** Kąt linii horyzontu nad poziomem oka (stopnie); -90 = brak terenu w tym kierunku */
   angles: Float32Array;
   /** Odległość do miejsca, które tworzy horyzont (m) */
   distances: Float32Array;
 };
 
-/** Panorama 360°: dla każdego azymutu najwyżej widoczny punkt terenu. Przy kroku 0,1° to 3600 promieni. */
-export function computeHorizon(dem: Dem, observer: Observer, step = 0.1, options: RayOptions = {}): Horizon {
+/**
+ * Panorama: dla każdego azymutu najwyżej widoczny punkt terenu. Domyślnie pełne 360° (przy kroku 0,1° to 3600
+ * promieni); `range` = [od, szerokość] w stopniach liczy tylko wycinek – np. kadr zdjęcia z zapasem.
+ */
+export function computeHorizon(
+  dem: Dem,
+  observer: Observer,
+  step = 0.1,
+  options: RayOptions = {},
+  range: [number, number] = [0, 360],
+): Horizon {
   const opt = { ...DEFAULTS, ...options };
-  const n = Math.round(360 / step);
+  const n = Math.max(1, Math.round(Math.min(range[1], 360) / step));
+  const from = ((range[0] % 360) + 360) % 360;
   const angles = new Float32Array(n);
   const distances = new Float32Array(n);
   for (let i = 0; i < n; i++) {
-    const r = rayMax(dem, observer, i * step, 0, opt.maxDistance, opt);
+    const r = rayMax(dem, observer, (from + i * step) % 360, 0, opt.maxDistance, opt);
     angles[i] = r.angle;
     distances[i] = r.distance;
   }
-  return { step, angles, distances };
+  return { step, from, angles, distances };
 }
 
-/** Kąt horyzontu w danym azymucie (najbliższa próbka panoramy). */
+/** Kąt horyzontu w danym azymucie (najbliższa próbka); NaN poza policzonym wycinkiem. */
 export function horizonAt(horizon: Horizon, azimuth: number): number {
   const n = horizon.angles.length;
-  const i = Math.round((((azimuth % 360) + 360) % 360) / horizon.step) % n;
-  return horizon.angles[i];
+  const rel = (((azimuth - horizon.from) % 360) + 360) % 360;
+  let i = Math.round(rel / horizon.step);
+  if (n * horizon.step >= 359.999) i %= n;
+  return i >= 0 && i < n ? horizon.angles[i] : NaN;
 }
 
 export type PeakLike = GeoPoint & { ele?: number };
@@ -112,6 +126,8 @@ export type VisibleOptions = RayOptions & {
   minDistance?: number;
   /** Tolerancja na niedokładność siatki 90 m: szczyt „wystający” o -tolerance° jeszcze liczymy jako widoczny */
   tolerance?: number;
+  /** Tylko szczyty w wycinku [od, szerokość] stopni azymutu (np. kadr zdjęcia z zapasem) */
+  range?: [number, number];
 };
 
 /**
@@ -135,6 +151,7 @@ export function visiblePeaks<P extends PeakLike>(
     const height = Math.max(peak.ele ?? -Infinity, demHeight ?? -Infinity);
     if (!Number.isFinite(height)) continue;
     const azimuth = bearing(observer, peak);
+    if (options.range && (((azimuth - options.range[0]) % 360) + 360) % 360 > options.range[1]) continue;
     const angle = elevationAngle(observer.elevation, height, distance);
     const margin = Math.max(150, distance * 0.02);
     const before = rayMax(dem, observer, azimuth, 0, distance - margin, opt);

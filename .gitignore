@@ -5,6 +5,7 @@ node_modules/
 
 # pobrane pliki danych (npm run dem)
 .cache/
+test-photos/
 
 # Expo
 .expo/

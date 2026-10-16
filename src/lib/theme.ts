@@ -130,3 +130,16 @@ export const POI_COLORS = {
   /** Linia planowanej trasy */
   route: '#FF6D00',
 } as const;
+
+/**
+ * Podpisy szczytów na zdjęciu – wspólne dla wszystkich motywów (wyjątek od useColors(), jak POI_COLORS):
+ * leżą na zdjęciu, więc muszą być czytelne na niebie i skałach niezależnie od motywu aplikacji.
+ */
+export const PHOTO_OVERLAY = {
+  text: '#FFFFFF',
+  shadow: 'rgba(0, 0, 0, 0.85)',
+  dot: '#FFFFFF',
+  dotBorder: 'rgba(0, 0, 0, 0.7)',
+  horizon: '#FF5A4E',
+  panel: 'rgba(0, 0, 0, 0.55)',
+};

@@ -94,6 +94,25 @@ export const en = {
     gone: 'This photo was deleted.',
   },
 
+  peaks: {
+    show: 'Show peaks',
+    hide: 'Hide peaks',
+    loading: 'Finding peaks…',
+    none: 'No named peaks found in this direction.',
+    noLocation: 'Peak names need the place where the photo was taken.',
+    noDirection: 'This photo has no compass direction, so peak names cannot be placed yet.',
+    outside: 'This photo was taken outside the Tatra terrain model.',
+    poisLoading: 'Peaks are still loading. Try again in a moment.',
+    adjust: 'Adjust',
+    done: 'Done',
+    reset: 'Reset',
+    adjustHint: 'Drag the photo until the red line matches the mountains.',
+    tapHint: 'Tap a dot to show or hide the peak name.',
+    estimated: 'Positions are estimated from GPS, compass and the phone tilt.',
+    dotA11y: (name: string) => `Peak ${name}`,
+    meta: (ele: number | undefined, km: string) => (ele ? `${ele} m · ${km} km` : `${km} km`),
+  },
+
   locate: {
     hint: 'Move the map so the pin points to where the photos were taken.',
     hintOne: 'Move the map so the pin points to where the photo was taken.',
@@ -159,7 +178,9 @@ export const en = {
     sourcesText:
       'Map and trails: © OpenStreetMap contributors (ODbL). Topographic map: OpenTopoMap (CC-BY-SA). ' +
       'Marked trails: waymarkedtrails.org (CC-BY-SA). Peaks, passes and huts: OpenStreetMap. ' +
-      'Route planning: BRouter (brouter.de). Map tiles you have viewed are kept on the phone.',
+      'Route planning: BRouter (brouter.de). Peak names on photos: terrain model Copernicus DEM GLO-30 ' +
+      '(© DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018, provided under COPERNICUS by the ' +
+      'European Union and ESA). Map tiles you have viewed are kept on the phone.',
   },
 
   theme: {

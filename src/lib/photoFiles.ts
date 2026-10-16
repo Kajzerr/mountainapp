@@ -1,6 +1,7 @@
 // Pliki zdjęć w katalogu aplikacji. Kopiujemy je z galerii, bo adres z expo-image-picker wskazuje na pamięć podręczną,
 // którą system może w każdej chwili wyczyścić.
-import { Directory, File, Paths } from 'expo-file-system';
+import { Directory, File, FileMode, Paths } from 'expo-file-system';
+import { metaFromFile, type FileMeta } from './exifFile';
 
 function photosDir(): Directory {
   return new Directory(Paths.document, 'photos');
@@ -24,6 +25,22 @@ export async function storePhotoFile(sourceUri: string, id: string): Promise<str
 /** Adres pliku do wyświetlenia. */
 export function photoUri(file: string): string {
   return new File(photosDir(), file).uri;
+}
+
+/** Dane do podpisów szczytów czytane wprost z pliku zdjęcia (czyta tylko potrzebne fragmenty, zwykle kilkadziesiąt KB). */
+export function readPhotoFileMeta(file: string): FileMeta {
+  const f = new File(photosDir(), file);
+  if (!f.exists) return {};
+  const size = f.size;
+  const handle = f.open(FileMode.ReadOnly);
+  try {
+    return metaFromFile((offset, length) => {
+      handle.offset = offset;
+      return handle.readBytes(Math.max(0, Math.min(length, size - offset)));
+    }, size);
+  } finally {
+    handle.close();
+  }
 }
 
 export function deletePhotoFile(file: string) {

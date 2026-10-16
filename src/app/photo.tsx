@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ComponentProps } from 'react';
+import { ComponentProps, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { PeaksLayer } from '../components/PeaksLayer';
 import { formatTakenAt } from '../lib/dates';
 import { photoUri } from '../lib/photoFiles';
 import { hasLocation } from '../lib/photoModel';
@@ -10,7 +11,7 @@ import { usePhotos } from '../lib/photos';
 import { useT } from '../lib/settings';
 import { Colors, fonts, useColors } from '../lib/theme';
 
-/** Jedno zdjęcie: podgląd, data, miejsce, zmiana miejsca i usuwanie. Parametr: id. */
+/** Jedno zdjęcie: podgląd, podpisy szczytów, data, miejsce, zmiana miejsca i usuwanie. Parametr: id. */
 export default function PhotoScreen() {
   const colors = useColors();
   const t = useT();
@@ -18,6 +19,8 @@ export default function PhotoScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { byId, removePhoto } = usePhotos();
   const photo = id ? byId.get(id) : undefined;
+  const [peaksOn, setPeaksOn] = useState(false);
+  const [adjusting, setAdjusting] = useState(false);
 
   if (!photo) {
     return (
@@ -46,13 +49,28 @@ export default function PhotoScreen() {
     ]);
 
   return (
-    <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.content}>
-      <Image
-        source={{ uri: photoUri(photo.file) }}
-        style={{ width, height: imageHeight, backgroundColor: colors.card }}
-        contentFit="contain"
-        accessibilityIgnoresInvertColors
-      />
+    <ScrollView
+      style={{ backgroundColor: colors.background }}
+      contentContainerStyle={styles.content}
+      scrollEnabled={!adjusting}
+    >
+      <View style={{ width, height: imageHeight, backgroundColor: colors.card }}>
+        <Image
+          source={{ uri: photoUri(photo.file) }}
+          style={StyleSheet.absoluteFill}
+          contentFit="contain"
+          accessibilityIgnoresInvertColors
+        />
+        {peaksOn && (
+          <PeaksLayer
+            photo={photo}
+            boxWidth={width}
+            boxHeight={imageHeight}
+            adjusting={adjusting}
+            onAdjustingChange={setAdjusting}
+          />
+        )}
+      </View>
       <View style={styles.info}>
         <InfoRow colors={colors} icon="calendar-outline" text={formatTakenAt(photo.takenAt) ?? t.photo.noDate} />
         <InfoRow
@@ -60,6 +78,19 @@ export default function PhotoScreen() {
           icon="location-outline"
           text={located ? `${photo.latitude.toFixed(5)}, ${photo.longitude.toFixed(5)}` : t.photo.noLocation}
         />
+        {located && (
+          <View style={styles.actions}>
+            <ActionButton
+              colors={colors}
+              icon={peaksOn ? 'eye-off-outline' : 'triangle-outline'}
+              label={peaksOn ? t.peaks.hide : t.peaks.show}
+              onPress={() => {
+                setPeaksOn((v) => !v);
+                setAdjusting(false);
+              }}
+            />
+          </View>
+        )}
         <View style={styles.actions}>
           <ActionButton
             colors={colors}

@@ -100,6 +100,25 @@ export const pl: Dict = {
     gone: 'To zdjęcie zostało usunięte.',
   },
 
+  peaks: {
+    show: 'Pokaż szczyty',
+    hide: 'Ukryj szczyty',
+    loading: 'Szukam szczytów…',
+    none: 'W tym kierunku nie ma nazwanych szczytów.',
+    noLocation: 'Do podpisów szczytów potrzebne jest miejsce zrobienia zdjęcia.',
+    noDirection: 'Zdjęcie nie ma zapisanego kierunku, więc nie da się jeszcze ustawić podpisów szczytów.',
+    outside: 'Zdjęcie zrobiono poza obszarem modelu terenu Tatr.',
+    poisLoading: 'Szczyty jeszcze się wczytują. Spróbuj za chwilę.',
+    adjust: 'Dopasuj',
+    done: 'Gotowe',
+    reset: 'Przywróć',
+    adjustHint: 'Przesuń palcem, aż czerwona linia pokryje się z górami.',
+    tapHint: 'Dotknij kropki, aby pokazać lub ukryć nazwę szczytu.',
+    estimated: 'Położenie szczytów jest wyliczone z GPS, kompasu i nachylenia telefonu.',
+    dotA11y: (name) => `Szczyt ${name}`,
+    meta: (ele, km) => (ele ? `${ele} m · ${km} km` : `${km} km`),
+  },
+
   locate: {
     hint: 'Przesuń mapę tak, żeby pinezka wskazywała miejsce zrobienia zdjęć.',
     hintOne: 'Przesuń mapę tak, żeby pinezka wskazywała miejsce zrobienia zdjęcia.',
@@ -165,7 +184,9 @@ export const pl: Dict = {
     sourcesText:
       'Mapa i szlaki: © autorzy OpenStreetMap (ODbL). Mapa topograficzna: OpenTopoMap (CC-BY-SA). ' +
       'Znakowane szlaki: waymarkedtrails.org (CC-BY-SA). Szczyty, przełęcze i schroniska: OpenStreetMap. ' +
-      'Wyznaczanie tras: BRouter (brouter.de). Obejrzane fragmenty mapy zostają w telefonie.',
+      'Wyznaczanie tras: BRouter (brouter.de). Podpisy szczytów na zdjęciach: model terenu Copernicus DEM GLO-30 ' +
+      '(© DLR e.V. 2010-2014 i © Airbus Defence and Space GmbH 2014-2018, udostępniony w ramach programu ' +
+      'COPERNICUS przez Unię Europejską i ESA). Obejrzane fragmenty mapy zostają w telefonie.',
   },
 
   theme: {

@@ -41,6 +41,13 @@ export type Photo = {
   make?: string;
   model?: string;
   lens?: string;
+  /** Pochylenie (+ w górę) i obrót aparatu w stopniach – z MakerNote iPhone'a, czytane z pliku (exifFile.ts) */
+  pitch?: number;
+  roll?: number;
+  /** true = plik już przeczytany pod kątem danych do podpisów szczytów (nie czytamy drugi raz) */
+  fileMetaRead?: boolean;
+  /** Ręczna poprawka ustawienia aparatu na ekranie podpisów: kierunek i pochylenie w stopniach */
+  view?: { heading: number; pitch: number };
   /** Rozpoznanie duplikatu: id zdjęcia w galerii telefonu albo nazwa pliku + data */
   source?: string;
   /** Moment dodania do aplikacji, "RRRR-MM-DDTGG:MM:SS" */
