@@ -1,5 +1,6 @@
-// Warstwa podpisów szczytów na ekranie zdjęcia: liczenie sceny, podpisy, ręczne dopasowanie palcem
-// (przesunięcie w bok = kierunek, w pionie = pochylenie) i pasek z komunikatem oraz przyciskami na dole zdjęcia.
+// Warstwa podpisów szczytów na ekranie zdjęcia: liczenie sceny, podpisy (po automatycznym dopasowaniu do linii gór,
+// gdy się udało), ręczne dopasowanie palcem (przesunięcie w bok = kierunek, w pionie = pochylenie) i pasek
+// z komunikatem oraz przyciskami na dole zdjęcia.
 import { Ionicons } from '@expo/vector-icons';
 import { ComponentProps, useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -37,10 +38,11 @@ export function PeaksLayer({ photo, boxWidth, boxHeight, adjusting, onAdjustingC
     state.exifHeading === undefined && !photo.view
       ? null
       : {
-          heading: photo.view?.heading ?? state.exifHeading ?? 0,
-          pitch: photo.view?.pitch ?? state.exifPitch,
-          roll: state.roll,
-          hfov: state.hfov,
+          // Kolejność: ręczna poprawka („Dopasuj”) → automatyczne dopasowanie do linii gór → czujniki z EXIF
+          heading: photo.view?.heading ?? state.auto?.heading ?? state.exifHeading ?? 0,
+          pitch: photo.view?.pitch ?? state.auto?.pitch ?? state.exifPitch,
+          roll: state.auto?.roll ?? state.roll,
+          hfov: state.auto?.hfov ?? state.hfov,
         };
   const pose: CameraPose | null = base
     ? { ...base, heading: (base.heading - drag.dx * degPerPt + 360) % 360, pitch: base.pitch + drag.dy * degPerPt }
@@ -92,12 +94,15 @@ export function PeaksLayer({ photo, boxWidth, boxHeight, adjusting, onAdjustingC
     : state.status === 'outside' ? t.peaks.outside
     : state.status === 'poisLoading' ? t.peaks.poisLoading
     : adjusting ? t.peaks.adjustHint
+    : state.aligning ? t.peaks.aligning
     : dotsMode ? t.peaks.tapHint
+    : state.auto && !photo.view ? t.peaks.autoAligned
     : t.peaks.estimated;
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-      {scene && pose && (
+      {/* Podczas automatycznego dopasowania podpisów nie pokazujemy – inaczej przeskoczyłyby po chwili */}
+      {scene && pose && !state.aligning && (
         <View
           style={{ position: 'absolute', left: (boxWidth - rectW) / 2, top: (boxHeight - rectH) / 2, width: rectW, height: rectH }}
           pointerEvents="box-none"
@@ -116,7 +121,7 @@ export function PeaksLayer({ photo, boxWidth, boxHeight, adjusting, onAdjustingC
         </View>
       )}
       <View style={styles.bar} pointerEvents="box-none">
-        {state.status === 'loading' && <ActivityIndicator color={PHOTO_OVERLAY.text} size="small" />}
+        {(state.status === 'loading' || state.aligning) && <ActivityIndicator color={PHOTO_OVERLAY.text} size="small" />}
         <Text style={styles.message}>{message}</Text>
         {state.status === 'ready' && (
           <View style={styles.buttons}>

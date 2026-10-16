@@ -51,6 +51,11 @@ export type Photo = {
   fileMetaVersion?: number;
   /** Ręczna poprawka ustawienia aparatu na ekranie podpisów: kierunek i pochylenie w stopniach */
   view?: { heading: number; pitch: number };
+  /**
+   * Automatyczne dopasowanie podpisów do linii gór (skylineAlign.ts): ustawienie aparatu w stopniach albo null,
+   * gdy na zdjęciu nie dało się pewnie znaleźć grani (zostają czujniki). Brak pola = jeszcze nie liczone.
+   */
+  autoView?: { heading: number; pitch: number; roll: number; hfov: number } | null;
   /** Rozpoznanie duplikatu: id zdjęcia w galerii telefonu albo nazwa pliku + data */
   source?: string;
   /** Moment dodania do aplikacji, "RRRR-MM-DDTGG:MM:SS" */

@@ -58,9 +58,11 @@ src/components/
   tripLabels.ts             – roleLabel: „Początek” / „Punkt 2” / „Koniec”
   useBriefTracking.ts       – tracksViewChanges na chwilę (znaczniki z własnym widokiem)
   usePeakScene.ts           – podpisy szczytów: raz czyta dane z pliku zdjęcia (readPhotoFileMeta → pitch/roll itd.),
-                              liczy scenę (analyzeScene) po narysowaniu ekranu; nowa scena po obrocie > 15°
-  PeaksLayer.tsx            – warstwa na zdjęciu: podpisy, „Dopasuj” (PanResponder: w bok = kierunek, w pionie =
-                              pochylenie, zapis w photo.view), „Przywróć”, pasek z komunikatem
+                              liczy scenę (analyzeScene) po narysowaniu ekranu; nowa scena po obrocie > 15°;
+                              potem raz automatyczne dopasowanie (loadSmallImage → edgeMap → alignToSkyline → photo.autoView)
+  PeaksLayer.tsx            – warstwa na zdjęciu: podpisy (ustawienie: photo.view → photo.autoView → EXIF), „Dopasuj”
+                              (PanResponder: w bok = kierunek, w pionie = pochylenie, zapis w photo.view), „Przywróć”
+                              (usuwa view – wraca do automatycznego), pasek z komunikatem
   PeakOverlay.tsx           – linia horyzontu (react-native-svg) + kropki i nazwy; od DOTS_FROM (5) szczytów same
                               kropki, nazwa po dotknięciu
 src/data/
@@ -85,6 +87,10 @@ src/lib/
                               (kamera otworkowa z pitch/roll), analyzeScene (wycinek kadr ± 25°), importance (wybitność +
                               wyrazistość na zdjęciu + linia nieba + wysokość), layoutLabels (od najważniejszych; odstęp,
                               bez powtórzonej nazwy), horizonLine (bez terenu < 1,5 km)
+  skylineAlign.ts           – automatyczne dopasowanie podpisów: edgeMap (krawędź niebo/góry z pikseli), alignToSkyline
+                              (kierunek ±15°, pochylenie ±2,5°, obrót ±2°, kąt widzenia ±6%; pewne, gdy wynik ≥ 0,4
+                              i o 0,15 lepszy niż z czujników) – czyste funkcje
+  photoPixels.ts            – loadSmallImage: zdjęcie zmniejszone do 320 px (expo-image-manipulator) → RGBA (jpeg-js)
   terrain.ts                – loadDem(): leniwe wczytanie src/data/tatry-dem.json
   places.ts                 – grupowanie zdjęć w miejsca (PLACE_RADIUS_M = 40 m), odległość (czyste funkcje)
   pois.ts                   – punkty z OSM: zapytanie Overpass, parseOverpass, poiName (pl), visiblePois (czyste)
@@ -109,10 +115,12 @@ src/lib/
 ```
 
 ## Model danych i zasady
-- `Photo`: `{ id, file, width, height, latitude?, longitude?, takenAt?, direction?, directionRef?, altitude?, gpsError?, focal35?, focal?, orientation?, make?, model?, lens?, pitch?, roll?, fileMetaVersion?, view?, source?, importedAt }`.
+- `Photo`: `{ id, file, width, height, latitude?, longitude?, takenAt?, direction?, directionRef?, altitude?, gpsError?, focal35?, focal?, orientation?, make?, model?, lens?, pitch?, roll?, fileMetaVersion?, view?, autoView?, source?, importedAt }`.
   Pola od `directionRef` do `lens` (PLAN.md 7.1) zapisujemy tylko, gdy są w EXIF; starsze zdjęcia ich nie mają.
   `pitch`/`roll` (iPhone) i brakujące `direction`/`focal35`/`orientation` uzupełnia przy pierwszym „Pokaż szczyty”
   odczyt pliku (`fileMetaVersion` = `FILE_META_VERSION`; podniesienie wersji = ponowny odczyt starszych zdjęć). `view` = ręczna poprawka `{ heading, pitch }` z ekranu podpisów.
+  `autoView` = wynik automatycznego dopasowania `{ heading, pitch, roll, hfov }`, `null` = nie udało się (brak pola =
+  nie liczone). Zmiana miejsca zdjęcia (`setLocation`) czyści `view` i `autoView`.
   `file` to **sama nazwa pliku** w `Paths.document/photos` (pełny adres liczy `photoUri`) – na iOS ścieżka katalogu
   aplikacji zmienia się po aktualizacji. `latitude`/`longitude` – oba albo żadne (`hasLocation`).
   Daty jako tekst `"RRRR-MM-DDTGG:MM:SS"` (czas lokalny), bez obiektów `Date` w danych.
@@ -141,5 +149,5 @@ komentarze w kodzie po polsku.
 ## Sprawdzanie zmian
 1. `npx.cmd tsc --noEmit` bez błędów.
 2. `expo export` dla iOS i Androida przechodzi.
-3. Logikę bez Reacta (`exif.ts`, `places.ts`, `photoModel.ts`, `pois.ts`, `trip.ts`, `routing.ts`, `dem.ts`, `horizon.ts`, `exifFile.ts`, `peakLabels.ts`) testuj na przykładach (kompilacja `tsc` do JS + `node`).
+3. Logikę bez Reacta (`exif.ts`, `places.ts`, `photoModel.ts`, `pois.ts`, `trip.ts`, `routing.ts`, `dem.ts`, `horizon.ts`, `exifFile.ts`, `peakLabels.ts`, `skylineAlign.ts`) testuj na przykładach (kompilacja `tsc` do JS + `node`).
 4. Napisz użytkownikowi wprost, czego nie sprawdzono na telefonie.

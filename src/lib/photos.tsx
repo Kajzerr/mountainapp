@@ -92,7 +92,12 @@ export function PhotosProvider({ children }: { children: ReactNode }) {
     (ids: string[], point: GeoPoint) => {
       const set = new Set(ids);
       update((prev) =>
-        prev.map((p) => (set.has(p.id) ? { ...p, latitude: point.latitude, longitude: point.longitude } : p)),
+        // Inne miejsce = inna panorama: ręczna i automatyczna poprawka podpisów są już nieaktualne
+        prev.map((p) =>
+          set.has(p.id)
+            ? { ...p, latitude: point.latitude, longitude: point.longitude, view: undefined, autoView: undefined }
+            : p,
+        ),
       );
     },
     [update],

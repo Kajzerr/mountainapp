@@ -115,6 +115,8 @@ export const pl: Dict = {
     adjustHint: 'Przesuń palcem, aż czerwona linia pokryje się z górami.',
     tapHint: 'Dotknij kropki, aby pokazać lub ukryć nazwę szczytu.',
     estimated: 'Położenie szczytów jest wyliczone z GPS, kompasu i nachylenia telefonu.',
+    aligning: 'Dopasowuję podpisy do gór na zdjęciu…',
+    autoAligned: 'Podpisy dopasowane do linii gór na zdjęciu. Jeśli coś się nie zgadza, użyj „Dopasuj”.',
     dotA11y: (name) => `Szczyt ${name}`,
     meta: (ele, km) => (ele ? `${ele} m · ${km} km` : `${km} km`),
   },

@@ -109,6 +109,8 @@ export const en = {
     adjustHint: 'Drag the photo until the red line matches the mountains.',
     tapHint: 'Tap a dot to show or hide the peak name.',
     estimated: 'Positions are estimated from GPS, compass and the phone tilt.',
+    aligning: 'Matching the labels to the mountains in the photo…',
+    autoAligned: 'Labels matched to the mountain line in the photo. Use Adjust if something is off.',
     dotA11y: (name: string) => `Peak ${name}`,
     meta: (ele: number | undefined, km: string) => (ele ? `${ele} m · ${km} km` : `${km} km`),
   },
