@@ -75,7 +75,8 @@ src/lib/
   horizon.ts                – panorama horyzontu (computeHorizon, 3600 promieni), visiblePeaks (zasłonięte /
                               na linii nieba), bearing; krzywizna Ziemi i refrakcja – czyste funkcje
   exifFile.ts               – EXIF prosto z pliku JPEG/HEIC (bez bibliotek): wektor grawitacji z MakerNote Apple
-                              (tag 8) → tiltFromGravity (pitch/roll; znak obrotu sprawdzony na zdjęciach), kierunek,
+                              (tag 8) → tiltFromGravity (pitch/roll; znak obrotu sprawdzony na zdjęciach; przedni aparat = odwrotne
+                              znaki, kierunek bez zmian), isFrontCamera (LensModel „front”), kierunek,
                               ogniskowa 35 mm, orientacja – czyste funkcje, `read(offset, length)` z zewnątrz
   peakLabels.ts             – podpisy szczytów: horizontalFov, trueHeading (deklinacja 5,5° dla "M"), project
                               (kamera otworkowa z pitch/roll), analyzeScene (wycinek kadr ± 25°), layoutLabels
@@ -104,10 +105,10 @@ src/lib/
 ```
 
 ## Model danych i zasady
-- `Photo`: `{ id, file, width, height, latitude?, longitude?, takenAt?, direction?, directionRef?, altitude?, gpsError?, focal35?, focal?, orientation?, make?, model?, lens?, pitch?, roll?, fileMetaRead?, view?, source?, importedAt }`.
+- `Photo`: `{ id, file, width, height, latitude?, longitude?, takenAt?, direction?, directionRef?, altitude?, gpsError?, focal35?, focal?, orientation?, make?, model?, lens?, pitch?, roll?, fileMetaVersion?, view?, source?, importedAt }`.
   Pola od `directionRef` do `lens` (PLAN.md 7.1) zapisujemy tylko, gdy są w EXIF; starsze zdjęcia ich nie mają.
   `pitch`/`roll` (iPhone) i brakujące `direction`/`focal35`/`orientation` uzupełnia przy pierwszym „Pokaż szczyty”
-  odczyt pliku (`fileMetaRead: true`). `view` = ręczna poprawka `{ heading, pitch }` z ekranu podpisów.
+  odczyt pliku (`fileMetaVersion` = `FILE_META_VERSION`; podniesienie wersji = ponowny odczyt starszych zdjęć). `view` = ręczna poprawka `{ heading, pitch }` z ekranu podpisów.
   `file` to **sama nazwa pliku** w `Paths.document/photos` (pełny adres liczy `photoUri`) – na iOS ścieżka katalogu
   aplikacji zmienia się po aktualizacji. `latitude`/`longitude` – oba albo żadne (`hasLocation`).
   Daty jako tekst `"RRRR-MM-DDTGG:MM:SS"` (czas lokalny), bez obiektów `Date` w danych.

@@ -143,6 +143,8 @@ export type FileMeta = {
   directionRef?: 'T' | 'M';
   focal35?: number;
   orientation?: number;
+  /** Obiektyw (LensModel), np. "iPhone 15 Pro front TrueDepth camera 2.69mm f/1.9" */
+  lens?: string;
 };
 
 /** Dane z bloku TIFF: IFD0 → Exif IFD (ogniskowa, MakerNote Apple) i GPS IFD (kierunek). */
@@ -194,6 +196,16 @@ export function metaFromTiff(tiff: Uint8Array): FileMeta {
     const v = u16(f35 + 8);
     if (v > 0) meta.focal35 = v;
   }
+  const lens = findTag(exif, 0xa434);
+  if (lens >= 0) {
+    // Tekst ASCII: do 4 znaków w samym wpisie, dłuższy pod wskazanym przesunięciem
+    const count = u32(lens + 4);
+    const start = count <= 4 ? lens + 8 : u32(lens + 8);
+    if (count > 0 && start + count <= tiff.length) {
+      const text = ascii(tiff, start, count).replace(/\0+$/, '').trim();
+      if (text) meta.lens = text;
+    }
+  }
   const maker = findTag(exif, 0x927c);
   if (maker >= 0) {
     const start = u32(maker + 8);
@@ -238,11 +250,18 @@ export type Tilt = {
   roll: number;
 };
 
+/** Zdjęcie z przedniego aparatu (selfie) – rozpoznajemy po nazwie obiektywu ("… front …"). */
+export function isFrontCamera(lens?: string): boolean {
+  return !!lens && /front/i.test(lens);
+}
+
 /**
  * Pochylenie i obrót kadru z wektora grawitacji. `orientation` z EXIF mówi, jak telefon był trzymany:
- * 1 – poziomo, 6 – pionowo (najczęstsze), 3 i 8 – odwrotnie.
+ * 1 – poziomo, 6 – pionowo (najczęstsze), 3 i 8 – odwrotnie. Przedni aparat patrzy w przeciwną stronę niż tylny
+ * (obrót o 180° wokół pionowej osi telefonu), więc pochylenie i obrót mają odwrotny znak. Kierunek z EXIF iPhone
+ * podaje już dla przedniego aparatu (sprawdzone na IMG_7333) – jego nie odwracamy.
  */
-export function tiltFromGravity(g: Gravity, orientation = 1): Tilt {
+export function tiltFromGravity(g: Gravity, orientation = 1, front = false): Tilt {
   const [x, y, z] = g;
   const norm = Math.hypot(x, y, z) || 1;
   const pitch = (Math.asin(Math.max(-1, Math.min(1, z / norm))) * 180) / Math.PI;
@@ -256,5 +275,5 @@ export function tiltFromGravity(g: Gravity, orientation = 1): Tilt {
   const across = x * right[0] + y * right[1];
   // Sprawdzone na zdjęciach testowych: grawitacja w stronę prawej krawędzi kadru = aparat obrócony przeciwnie do zegara
   const roll = (Math.atan2(-across, along) * 180) / Math.PI;
-  return { pitch, roll };
+  return front ? { pitch: -pitch, roll: -roll } : { pitch, roll };
 }

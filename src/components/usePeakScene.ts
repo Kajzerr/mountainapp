@@ -2,10 +2,10 @@
 // i ciężkie liczenie sceny (horyzont + widoczne szczyty) – raz na zdjęcie, poza renderowaniem.
 import { useEffect, useMemo, useState } from 'react';
 import { readPhotoFileMeta } from '../lib/photoFiles';
-import { hasLocation, type Photo } from '../lib/photoModel';
+import { FILE_META_VERSION, hasLocation, type Photo } from '../lib/photoModel';
 import { usePhotos } from '../lib/photos';
 import { analyzeScene, horizontalFov, PAN_MARGIN, type PhotoScene, trueHeading } from '../lib/peakLabels';
-import { tiltFromGravity } from '../lib/exifFile';
+import { isFrontCamera, tiltFromGravity } from '../lib/exifFile';
 import type { Poi } from '../lib/pois';
 import { usePois } from '../lib/poiStore';
 import { loadDem } from '../lib/terrain';
@@ -32,19 +32,21 @@ export function usePeakScene(photo: Photo, active: boolean): PeakSceneState {
   const { pois, status: poisStatus } = usePois();
   const peaks = useMemo(() => pois.filter((p) => p.kind === 'peak'), [pois]);
 
-  // 1. Raz na zdjęcie: dane prosto z pliku (iPhone: nachylenie; starsze importy: kierunek i ogniskowa)
+  // 1. Raz na zdjęcie: dane prosto z pliku (iPhone: nachylenie; starsze importy: kierunek, ogniskowa, obiektyw)
+  const metaDone = (photo.fileMetaVersion ?? 0) >= FILE_META_VERSION;
   useEffect(() => {
-    if (!active || photo.fileMetaRead) return;
+    if (!active || metaDone) return;
     let meta: ReturnType<typeof readPhotoFileMeta> = {};
     try {
       meta = readPhotoFileMeta(photo.file);
     } catch (e) {
       console.warn('Could not read photo file metadata', e);
     }
-    const patch: Partial<Photo> = { fileMetaRead: true };
+    const patch: Partial<Photo> = { fileMetaVersion: FILE_META_VERSION };
     const orientation = photo.orientation ?? meta.orientation ?? (photo.height > photo.width ? 6 : 1);
+    const lens = photo.lens ?? meta.lens;
     if (meta.gravity) {
-      const tilt = tiltFromGravity(meta.gravity, orientation);
+      const tilt = tiltFromGravity(meta.gravity, orientation, isFrontCamera(lens));
       patch.pitch = Math.round(tilt.pitch * 100) / 100;
       patch.roll = Math.round(tilt.roll * 100) / 100;
     }
@@ -52,8 +54,9 @@ export function usePeakScene(photo: Photo, active: boolean): PeakSceneState {
     if (photo.directionRef === undefined && meta.directionRef) patch.directionRef = meta.directionRef;
     if (photo.focal35 === undefined && meta.focal35 !== undefined) patch.focal35 = meta.focal35;
     if (photo.orientation === undefined && meta.orientation !== undefined) patch.orientation = meta.orientation;
+    if (photo.lens === undefined && meta.lens) patch.lens = meta.lens;
     updatePhoto(photo.id, patch);
-  }, [active, photo, updatePhoto]);
+  }, [active, metaDone, photo, updatePhoto]);
 
   const aspect = photo.width > 0 && photo.height > 0 ? photo.width / photo.height : 4 / 3;
   const hfov = horizontalFov(photo.width || 4, photo.height || 3, photo.focal35);
@@ -74,7 +77,7 @@ export function usePeakScene(photo: Photo, active: boolean): PeakSceneState {
   const [result, setResult] = useState<{ key: string; status: PeakSceneStatus; scene?: PhotoScene<Poi> } | null>(null);
   const located = hasLocation(photo);
   const key = `${photo.id}|${photo.latitude}|${photo.longitude}|${center}|${hfov}|${peaks.length}`;
-  const ready = active && photo.fileMetaRead === true && located && center !== undefined && peaks.length > 0;
+  const ready = active && metaDone && located && center !== undefined && peaks.length > 0;
 
   // 3. Ciężkie liczenie po narysowaniu ekranu (setTimeout), żeby najpierw pokazał się wskaźnik ładowania
   useEffect(() => {
@@ -89,7 +92,7 @@ export function usePeakScene(photo: Photo, active: boolean): PeakSceneState {
 
   let status: PeakSceneStatus = 'loading';
   if (!located) status = 'noLocation';
-  else if (photo.fileMetaRead && exifHeading === undefined && !photo.view) status = 'noDirection';
+  else if (metaDone && exifHeading === undefined && !photo.view) status = 'noDirection';
   else if (peaks.length === 0) status = poisStatus === 'ready' ? 'outside' : 'poisLoading';
   else if (result?.key === key) status = result.status;
 

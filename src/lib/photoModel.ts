@@ -44,8 +44,11 @@ export type Photo = {
   /** Pochylenie (+ w górę) i obrót aparatu w stopniach – z MakerNote iPhone'a, czytane z pliku (exifFile.ts) */
   pitch?: number;
   roll?: number;
-  /** true = plik już przeczytany pod kątem danych do podpisów szczytów (nie czytamy drugi raz) */
-  fileMetaRead?: boolean;
+  /**
+   * Wersja odczytu pliku pod kątem podpisów szczytów (FILE_META_VERSION). Starsza albo brak = czytamy plik
+   * jeszcze raz. Dawne pole `fileMetaRead: true` (wersja 1) może zostać w zapisanych danych – nie przeszkadza.
+   */
+  fileMetaVersion?: number;
   /** Ręczna poprawka ustawienia aparatu na ekranie podpisów: kierunek i pochylenie w stopniach */
   view?: { heading: number; pitch: number };
   /** Rozpoznanie duplikatu: id zdjęcia w galerii telefonu albo nazwa pliku + data */
@@ -53,6 +56,9 @@ export type Photo = {
   /** Moment dodania do aplikacji, "RRRR-MM-DDTGG:MM:SS" */
   importedAt: string;
 };
+
+/** 2 – rozpoznawanie przedniego aparatu (selfie): odwrotny znak pochylenia i obrotu. */
+export const FILE_META_VERSION = 2;
 
 export type LocatedPhoto = Photo & { latitude: number; longitude: number };
 
