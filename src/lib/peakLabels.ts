@@ -104,15 +104,31 @@ export function analyzeScene<P extends PeakLike>(
 
 export type PeakLabel<P extends PeakLike> = Point & { view: PeakView<P> };
 
-/** Kolejność ważności podpisów: najpierw szczyty na linii nieba, potem wyższe. */
+/**
+ * Ważność podpisu. Składniki:
+ * - sława: wybitność szczytu (25 m → 0, 50 m → 1, 100 m → 2 … 800 m → 5); bez danych – średnio,
+ * - wyrazistość na zdjęciu: o ile stopni wierzchołek wystaje nad teren przed nim (do 8°), ale tylko dla szczytów
+ *   z wybitnością – turnia na grani ważniejszego szczytu wystaje tak samo jak on, a nie jest osobną górą,
+ * - premia za linię nieba i za wysokość.
+ * Dzięki temu bliski, wyraźny Kościelec (z Granatów) wygrywa z ledwo widocznym garbem daleko na horyzoncie,
+ * a Gerlach – z turnią obok niego.
+ */
+export function importance(view: PeakView<PeakLike>): number {
+  const prominence = view.peak.prominence;
+  const fame = prominence === undefined ? 1 : Math.min(5, Math.max(0, Math.log2(prominence / 25)));
+  const distinct = prominence === undefined ? 0.5 : Math.min(1, prominence / 50);
+  const salience = 0.4 * distinct * Math.min(Math.max(view.clearance, 0), 8);
+  return fame + salience + (view.onSkyline ? 1 : 0) + ((view.peak.ele ?? 1500) - 1500) / 500;
+}
+
 function rank<P extends PeakLike>(a: PeakView<P>, b: PeakView<P>): number {
-  if (a.onSkyline !== b.onSkyline) return a.onSkyline ? -1 : 1;
-  return (b.peak.ele ?? 0) - (a.peak.ele ?? 0);
+  return importance(b) - importance(a);
 }
 
 /**
- * Szczyty do podpisania przy danym ustawieniu aparatu, od lewej. Pomijamy te poza kadrem, ledwo wystające
- * zza bliższego terenu i stojące zbyt blisko ważniejszego (odstęp `minGap` szerokości zdjęcia).
+ * Szczyty do podpisania przy danym ustawieniu aparatu, od lewej. Wybieramy od najważniejszych (`importance`);
+ * pomijamy te poza kadrem, ledwo wystające zza bliższego terenu i stojące zbyt blisko ważniejszego (odstęp
+ * `minGap` szerokości zdjęcia w poziomie i półtora raza tyle w pionie).
  */
 export function layoutLabels<P extends PeakLike>(
   scene: PhotoScene<P>,
@@ -120,14 +136,17 @@ export function layoutLabels<P extends PeakLike>(
   aspect: number,
   options: { max?: number; minGap?: number; minClearance?: number } = {},
 ): PeakLabel<P>[] {
-  const { max = 15, minGap = 0.05, minClearance = 0.3 } = options;
+  const { max = 15, minGap = 0.04, minClearance = 0.3 } = options;
   const chosen: PeakLabel<P>[] = [];
   for (const view of [...scene.views].sort(rank)) {
     if (chosen.length >= max) break;
     if (!view.onSkyline && view.clearance < minClearance) continue;
     const pt = project(pose, aspect, view.azimuth, view.angle);
     if (!pt || pt.x < 0.02 || pt.x > 0.98 || pt.y < 0.02 || pt.y > 0.98) continue;
-    if (chosen.some((c) => Math.abs(c.x - pt.x) < minGap)) continue;
+    // Za blisko ważniejszego – w poziomie i w pionie (bliska turnia pod dalekim szczytem może zostać)
+    if (chosen.some((c) => Math.abs(c.x - pt.x) < minGap && Math.abs(c.y - pt.y) < minGap * 1.5)) continue;
+    // Drugi wierzchołek tego samego szczytu (ta sama nazwa) – jeden podpis wystarczy
+    if (view.peak.name && chosen.some((c) => c.view.peak.name === view.peak.name && Math.abs(c.x - pt.x) < 0.15)) continue;
     chosen.push({ ...pt, view });
   }
   return chosen.sort((a, b) => a.x - b.x);

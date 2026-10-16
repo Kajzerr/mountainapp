@@ -37,7 +37,8 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "pois": "node scripts/fetch-pois.mjs",
-    "dem": "node scripts/fetch-dem.mjs"
+    "dem": "node scripts/fetch-dem.mjs",
+    "prominence": "node scripts/peak-prominence.mjs"
   },
   "private": true
 }

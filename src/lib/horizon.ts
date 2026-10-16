@@ -106,7 +106,13 @@ export function horizonAt(horizon: Horizon, azimuth: number): number {
   return i >= 0 && i < n ? horizon.angles[i] : NaN;
 }
 
-export type PeakLike = GeoPoint & { ele?: number };
+export type PeakLike = GeoPoint & {
+  /** Nazwa – ten sam szczyt bywa w OSM dwa razy (np. Świnica: wierzchołek polski i słowacki) */
+  name?: string;
+  ele?: number;
+  /** Wybitność w metrach (src/data/tatry-prominence.json, `npm.cmd run prominence`) – do wyboru podpisów */
+  prominence?: number;
+};
 
 export type PeakView<P extends PeakLike> = {
   peak: P;

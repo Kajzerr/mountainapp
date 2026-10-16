@@ -9,6 +9,7 @@ import { isFrontCamera, tiltFromGravity } from '../lib/exifFile';
 import type { Poi } from '../lib/pois';
 import { usePois } from '../lib/poiStore';
 import { loadDem } from '../lib/terrain';
+import PROMINENCE from '../data/tatry-prominence.json';
 
 export type PeakSceneStatus = 'loading' | 'ready' | 'noLocation' | 'noDirection' | 'outside' | 'poisLoading';
 
@@ -30,7 +31,14 @@ const RECENTER_AFTER = PAN_MARGIN * 0.6;
 export function usePeakScene(photo: Photo, active: boolean): PeakSceneState {
   const { updatePhoto } = usePhotos();
   const { pois, status: poisStatus } = usePois();
-  const peaks = useMemo(() => pois.filter((p) => p.kind === 'peak'), [pois]);
+  // Szczyty z wybitnością (wybór ważniejszych podpisów); punkty spoza wbudowanego pliku jej nie mają
+  const peaks = useMemo(
+    () =>
+      pois
+        .filter((p) => p.kind === 'peak')
+        .map((p) => ({ ...p, prominence: (PROMINENCE as Record<string, number>)[p.id] })),
+    [pois],
+  );
 
   // 1. Raz na zdjęcie: dane prosto z pliku (iPhone: nachylenie; starsze importy: kierunek, ogniskowa, obiektyw)
   const metaDone = (photo.fileMetaVersion ?? 0) >= FILE_META_VERSION;

@@ -23,6 +23,7 @@ npx.cmd expo export --platform ios --platform android --output-dir dist   # czy 
 npx.cmd expo install <pakiet> # nowe biblioteki – zawsze tak
 npm.cmd run pois              # pobiera szczyty/schroniska z OSM do src/data/tatry-osm.json (wbudowane w aplikację)
 npm.cmd run dem               # pobiera model terenu Copernicus do src/data/tatry-dem.json (pliki źródłowe w .cache/dem)
+npm.cmd run prominence        # wybitność szczytów → src/data/tatry-prominence.json (po `pois` albo `dem`; czyta .cache/dem)
 npx.cmd eas-cli@latest build -p android --profile preview   # testowy APK na Androida
 ```
 Nowe biblioteki muszą działać w **Expo Go** – sprawdź `node_modules/expo/bundledNativeModules.json`. Inaczej najpierw zapytaj.
@@ -68,6 +69,8 @@ src/data/
   tatry-dem.json            – model terenu (siatka ok. 90 m, int16 w base64, ok. 3,5 MB); generuje `npm.cmd run dem`
                               (scripts/fetch-dem.mjs, biblioteka geotiff tylko w devDependencies). Wczytuje go
                               lib/terrain.ts dopiero przy pierwszych podpisach szczytów (require, nie import).
+  tatry-prominence.json     – wybitność szczytów { "n<id OSM>": metry } z siatki 30 m; generuje `npm.cmd run prominence`
+                              (scripts/peak-prominence.mjs); usePeakScene dokleja ją do szczytów (wybór podpisów)
 src/lib/
   exif.ts                   – GPS, data i kierunek z EXIF (czyste funkcje; różnice iOS/Android opisane w pliku)
   dem.ts                    – model terenu: parseDem, elevationAt (interpolacja), observerHeight (teren + 1,7 m,
@@ -79,8 +82,9 @@ src/lib/
                               znaki, kierunek bez zmian), isFrontCamera (LensModel „front”), kierunek,
                               ogniskowa 35 mm, orientacja – czyste funkcje, `read(offset, length)` z zewnątrz
   peakLabels.ts             – podpisy szczytów: horizontalFov, trueHeading (deklinacja 5,5° dla "M"), project
-                              (kamera otworkowa z pitch/roll), analyzeScene (wycinek kadr ± 25°), layoutLabels
-                              (najpierw linia nieba, potem wysokość; odstęp), horizonLine (bez terenu < 1,5 km)
+                              (kamera otworkowa z pitch/roll), analyzeScene (wycinek kadr ± 25°), importance (wybitność +
+                              wyrazistość na zdjęciu + linia nieba + wysokość), layoutLabels (od najważniejszych; odstęp,
+                              bez powtórzonej nazwy), horizonLine (bez terenu < 1,5 km)
   terrain.ts                – loadDem(): leniwe wczytanie src/data/tatry-dem.json
   places.ts                 – grupowanie zdjęć w miejsca (PLACE_RADIUS_M = 40 m), odległość (czyste funkcje)
   pois.ts                   – punkty z OSM: zapytanie Overpass, parseOverpass, poiName (pl), visiblePois (czyste)
