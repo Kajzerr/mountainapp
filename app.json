@@ -36,6 +36,13 @@
         }
       ],
       [
+        "expo-media-library",
+        {
+          "photosPermission": "Mountain Map shows your photos on the map at the places where they were taken.",
+          "savePhotosPermission": "Mountain Map saves your photos with peak names to the photo library."
+        }
+      ],
+      [
         "expo-location",
         {
           "locationWhenInUsePermission": "Mountain Map shows your position on the trail map."

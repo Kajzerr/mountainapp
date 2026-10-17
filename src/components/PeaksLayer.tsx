@@ -1,15 +1,17 @@
 // Warstwa podpisów szczytów na ekranie zdjęcia: liczenie sceny, podpisy (po automatycznym dopasowaniu do linii gór,
 // gdy się udało), ręczne dopasowanie palcem (przesunięcie w bok = kierunek, w pionie = pochylenie) i pasek
-// z komunikatem oraz przyciskami na dole zdjęcia.
+// z komunikatem oraz przyciskami na dole zdjęcia. „Zapisz” zapisuje zdjęcie z widocznymi nazwami w galerii.
 import { Ionicons } from '@expo/vector-icons';
-import { ComponentProps, useCallback, useMemo, useRef, useState } from 'react';
+import { ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 import { type CameraPose, DOTS_FROM, layoutLabels } from '../lib/peakLabels';
+import { saveToGallery } from '../lib/photoExport';
 import type { Photo } from '../lib/photoModel';
 import { usePhotos } from '../lib/photos';
 import { useT } from '../lib/settings';
 import { fonts, PHOTO_OVERLAY } from '../lib/theme';
 import { PeakOverlay } from './PeakOverlay';
+import { PeakSnapshot } from './PeakSnapshot';
 import { usePeakScene } from './usePeakScene';
 
 type Props = {
@@ -27,6 +29,15 @@ export function PeaksLayer({ photo, boxWidth, boxHeight, adjusting, onAdjustingC
   const state = usePeakScene(photo, true);
   const [shown, setShown] = useState<ReadonlySet<string>>(new Set());
   const [drag, setDrag] = useState({ dx: 0, dy: 0 });
+  // Zapis zdjęcia z podpisami: trwa (snapshot narysowany poza ekranem) i komunikat po zakończeniu
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(null), 4000);
+    return () => clearTimeout(timer);
+  }, [notice]);
 
   // Prostokąt, który faktycznie zajmuje zdjęcie w polu (paski po bokach albo u góry i dołu)
   const scale = Math.min(boxWidth / (photo.width || 1), boxHeight / (photo.height || 1));
@@ -87,8 +98,32 @@ export function PeaksLayer({ photo, boxWidth, boxHeight, adjusting, onAdjustingC
     [scene, pose, state.aspect],
   );
 
+  const onSnapshot = useCallback(
+    (uri: string | null) => {
+      // GPS z oryginału; kierunek – ten, w którym stoją podpisy (po dopasowaniu, względem północy geograficznej)
+      const p = latest.current.pose;
+      const gps =
+        photo.latitude !== undefined && photo.longitude !== undefined
+          ? {
+              latitude: photo.latitude,
+              longitude: photo.longitude,
+              altitude: photo.altitude,
+              direction: p?.heading,
+              directionRef: 'T' as const,
+            }
+          : undefined;
+      const result = uri ? saveToGallery(uri, gps) : Promise.resolve('failed' as const);
+      result
+        .then((r) => setNotice(r === 'saved' ? t.peaks.saved : r === 'shared' ? null : t.peaks.saveFailed))
+        .finally(() => setSaving(false));
+    },
+    [t, photo.latitude, photo.longitude, photo.altitude],
+  );
+
   const message =
-    state.status === 'loading' ? t.peaks.loading
+    saving ? t.peaks.saving
+    : notice ? notice
+    : state.status === 'loading' ? t.peaks.loading
     : state.status === 'noLocation' ? t.peaks.noLocation
     : state.status === 'noDirection' ? t.peaks.noDirection
     : state.status === 'outside' ? t.peaks.outside
@@ -120,11 +155,33 @@ export function PeaksLayer({ photo, boxWidth, boxHeight, adjusting, onAdjustingC
           {adjusting && <View style={StyleSheet.absoluteFill} {...responder.panHandlers} />}
         </View>
       )}
+      {saving && scene && pose && (
+        <PeakSnapshot
+          photo={photo}
+          scene={scene}
+          pose={pose}
+          aspect={state.aspect}
+          screenWidth={rectW}
+          shown={shown}
+          onDone={onSnapshot}
+        />
+      )}
       <View style={styles.bar} pointerEvents="box-none">
-        {(state.status === 'loading' || state.aligning) && <ActivityIndicator color={PHOTO_OVERLAY.text} size="small" />}
+        {(state.status === 'loading' || state.aligning || saving) && <ActivityIndicator color={PHOTO_OVERLAY.text} size="small" />}
         <Text style={styles.message}>{message}</Text>
         {state.status === 'ready' && (
           <View style={styles.buttons}>
+            {!adjusting && !state.aligning && pose && (
+              <BarButton
+                icon="download-outline"
+                accessibilityLabel={t.peaks.save}
+                disabled={saving}
+                onPress={() => {
+                  setNotice(null);
+                  setSaving(true);
+                }}
+              />
+            )}
             {photo.view && !adjusting && (
               <BarButton icon="refresh" label={t.peaks.reset} onPress={() => updatePhoto(photo.id, { view: undefined })} />
             )}
@@ -142,15 +199,27 @@ export function PeaksLayer({ photo, boxWidth, boxHeight, adjusting, onAdjustingC
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
-function BarButton({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
+type BarButtonProps = {
+  icon: IconName;
+  /** Bez tekstu – sama ikona, wtedy wymagany accessibilityLabel */
+  label?: string;
+  accessibilityLabel?: string;
+  disabled?: boolean;
+  onPress: () => void;
+};
+
+function BarButton({ icon, label, accessibilityLabel, disabled, onPress }: BarButtonProps) {
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.button, { opacity: pressed ? 0.7 : 1 }]}
+      disabled={disabled}
+      style={({ pressed }) => [styles.button, !label && styles.iconButton, { opacity: pressed || disabled ? 0.6 : 1 }]}
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityState={{ disabled: !!disabled }}
     >
-      <Ionicons name={icon} size={16} color={PHOTO_OVERLAY.text} />
-      <Text style={styles.buttonText}>{label}</Text>
+      <Ionicons name={icon} size={label ? 16 : 20} color={PHOTO_OVERLAY.text} />
+      {label && <Text style={styles.buttonText}>{label}</Text>}
     </Pressable>
   );
 }
@@ -166,5 +235,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 44, paddingHorizontal: 10, borderRadius: 10,
     borderWidth: 1, borderColor: PHOTO_OVERLAY.text,
   },
+  iconButton: { width: 44, justifyContent: 'center', paddingHorizontal: 0 },
   buttonText: { fontFamily: fonts.semibold, fontSize: 13, color: PHOTO_OVERLAY.text },
 });

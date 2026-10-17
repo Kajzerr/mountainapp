@@ -62,9 +62,11 @@ src/components/
                               potem raz automatyczne dopasowanie (loadSmallImage → edgeMap → alignToSkyline → photo.autoView)
   PeaksLayer.tsx            – warstwa na zdjęciu: podpisy (ustawienie: photo.view → photo.autoView → EXIF), „Dopasuj”
                               (PanResponder: w bok = kierunek, w pionie = pochylenie, zapis w photo.view), „Przywróć”
-                              (usuwa view – wraca do automatycznego), pasek z komunikatem
+                              (usuwa view – wraca do automatycznego), „Zapisz” (ikona), pasek z komunikatem
+  PeakSnapshot.tsx          – kopia zdjęcia z podpisami poza ekranem (do 3000 px, podpisy powiększone o tę samą skalę),
+                              captureRef (react-native-view-shot) → JPEG; tylko rozwinięte nazwy, bez linii horyzontu
   PeakOverlay.tsx           – linia horyzontu (react-native-svg) + kropki i nazwy; od DOTS_FROM (5) szczytów same
-                              kropki, nazwa po dotknięciu
+                              kropki, nazwa po dotknięciu; scale + snapshot do zapisu zdjęcia
 src/data/
   overpass-query.json       – zapytanie Overpass + obszar Tatr (wspólne dla aplikacji i skryptu)
   tatry-osm.json            – punkty wbudowane w aplikację; generuje `npm.cmd run pois` (scripts/fetch-pois.mjs)
@@ -90,6 +92,10 @@ src/lib/
   skylineAlign.ts           – automatyczne dopasowanie podpisów: edgeMap (krawędź niebo/góry z pikseli), alignToSkyline
                               (kierunek ±15°, pochylenie ±2,5°, obrót ±2°, kąt widzenia ±6%; pewne, gdy wynik ≥ 0,4
                               i o 0,15 lepszy niż z czujników) – czyste funkcje
+  photoExport.ts            – exportSize, saveToGallery (expo-media-library Asset.create, zgoda tylko na zapis;
+                              gdy się nie uda – okno udostępniania expo-sharing); dopisuje GPS z oryginału
+  exifWrite.ts              – gpsExifSegment (blok EXIF z samym GPS: pozycja, wysokość, kierunek), insertExif
+                              (wstawia go do JPEG, usuwa stary EXIF) – czyste funkcje; daty nie dopisujemy
   photoPixels.ts            – loadSmallImage: zdjęcie zmniejszone do 320 px (expo-image-manipulator) → RGBA (jpeg-js)
   terrain.ts                – loadDem(): leniwe wczytanie src/data/tatry-dem.json
   places.ts                 – grupowanie zdjęć w miejsca (PLACE_RADIUS_M = 40 m), odległość (czyste funkcje)
@@ -149,5 +155,5 @@ komentarze w kodzie po polsku.
 ## Sprawdzanie zmian
 1. `npx.cmd tsc --noEmit` bez błędów.
 2. `expo export` dla iOS i Androida przechodzi.
-3. Logikę bez Reacta (`exif.ts`, `places.ts`, `photoModel.ts`, `pois.ts`, `trip.ts`, `routing.ts`, `dem.ts`, `horizon.ts`, `exifFile.ts`, `peakLabels.ts`, `skylineAlign.ts`) testuj na przykładach (kompilacja `tsc` do JS + `node`).
+3. Logikę bez Reacta (`exif.ts`, `places.ts`, `photoModel.ts`, `pois.ts`, `trip.ts`, `routing.ts`, `dem.ts`, `horizon.ts`, `exifFile.ts`, `exifWrite.ts`, `peakLabels.ts`, `skylineAlign.ts`) testuj na przykładach (kompilacja `tsc` do JS + `node`).
 4. Napisz użytkownikowi wprost, czego nie sprawdzono na telefonie.
