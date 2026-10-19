@@ -159,3 +159,16 @@ Zamiast sieci, która „zna” wygląd Giewontu (brak danych treningowych, każ
 4. Automatyczne dopasowanie linii nieba (JS), z miarą pewności.
 5. Tryb na żywo z kamery (ten sam silnik, kierunek z czujników).
 6. Wyszukiwanie zdjęć po szczytach, „skąd widać ten szczyt” na mapie.
+
+## 8. Wspólna wycieczka: pozycje na żywo (pomysł, 2026-10-19)
+
+Kilka osób na swoich telefonach uruchamia w aplikacji wycieczkę i łączy się w grupę. Każdy widzi na mapie na żywo, gdzie są pozostali.
+
+- **Łączenie:** jedna osoba zakłada wycieczkę i pokazuje kod (QR albo kilka znaków), reszta go skanuje lub wpisuje. Bez kont: imię i kolor ustawia się w aplikacji.
+- **Przesyłanie pozycji:** telefony nie łączą się bezpośrednio na odległość, więc potrzebny jest mały serwer pośredniczący (np. Firebase, Supabase albo własny WebSocket). Każdy wysyła swoją pozycję co kilkanaście–kilkadziesiąt sekund, a dostaje pozycje reszty grupy.
+- **Na mapie:** znacznik każdej osoby z imieniem, kolorem i czasem ostatniej pozycji („3 min temu”); opcjonalnie ślad przebytej drogi.
+- **Słaby zasięg w górach:** pokazujemy ostatnią znaną pozycję z jej wiekiem; pozycje z czasu bez zasięgu można dosłać później.
+- **Bateria:** rzadsze wysyłanie, gdy ktoś stoi; pozycja w tle wymaga zgody na lokalizację „zawsze” i development builda (w Expo Go praca w tle jest ograniczona).
+- **Prywatność:** udostępnianie tylko podczas aktywnej wycieczki, wyraźny przycisk „Zakończ udostępnianie”, dane grupy usuwane po zakończeniu.
+
+Do ustalenia: który serwer (koszt, czy działa w Expo Go), jak często wysyłać pozycję, czy w tle ma działać od pierwszej wersji.
