@@ -169,6 +169,7 @@ Kilka osób na swoich telefonach uruchamia w aplikacji wycieczkę i łączy się
 - **Na mapie:** znacznik każdej osoby z imieniem, kolorem i czasem ostatniej pozycji („3 min temu”); opcjonalnie ślad przebytej drogi.
 - **Słaby zasięg w górach:** pokazujemy ostatnią znaną pozycję z jej wiekiem; pozycje z czasu bez zasięgu można dosłać później.
 - **Bateria:** rzadsze wysyłanie, gdy ktoś stoi; pozycja w tle wymaga zgody na lokalizację „zawsze” i development builda (w Expo Go praca w tle jest ograniczona).
+- **Obserwator (rozszerzenie):** osoba dołącza do wycieczki tym samym kodem, ale jako obserwator: widzi na mapie pozycje uczestników, a swojej nie wysyła i sama nie pojawia się na mapie innych. Przydatne np. dla rodziny w domu albo osoby czekającej w schronisku. Uczestnicy widzą listę obserwatorów (prywatność) i założyciel może obserwatora usunąć. Obserwator nie potrzebuje zgody na lokalizację ani pracy w tle; docelowo mógłby obserwować nawet przez link w przeglądarce, bez aplikacji.
 - **Prywatność:** udostępnianie tylko podczas aktywnej wycieczki, wyraźny przycisk „Zakończ udostępnianie”, dane grupy usuwane po zakończeniu.
 
 Do ustalenia: który serwer (koszt, czy działa w Expo Go), jak często wysyłać pozycję, czy w tle ma działać od pierwszej wersji.
